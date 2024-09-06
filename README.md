@@ -1,4 +1,11 @@
-# Team 101 - 15
+
+# CS 346 Group Project | Team 101 - 15
+
+## Team Members
+- Ahmed Ahmed (@ah4ahmed)
+- Vivek Bhardwaj (@v24bhard)
+- Aiden Ramgoolam (@aaramgoo)
+- Karthik Nambiar (@k3nambia)
 
 
 
