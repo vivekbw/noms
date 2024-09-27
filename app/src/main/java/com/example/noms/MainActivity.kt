@@ -1,38 +1,43 @@
 package com.example.noms
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
-import com.example.noms.databinding.ActivityMainBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.example.noms.ui.MainScreen
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivityMainBinding
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        val toolbar: androidx.appcompat.widget.Toolbar = binding.toolbar
-        setSupportActionBar(toolbar)
-
-        val navView: BottomNavigationView = binding.navView
-
-        val navController = findNavController(R.id.nav_host_fragment_activity_main)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_restaurants, R.id.navigation_social, R.id.navigation_profile
+        setContent {
+            val customColorScheme = lightColorScheme(
+                primary = Color(0xFF2E8B57),
+                secondary = Color(0xFF2E8B57),
+                tertiary = Color(0xFF2E8B57),
+                background = Color.White,
+                surface = Color.White,
+                onPrimary = Color.White,
+                onSecondary = Color.White,
+                onTertiary = Color.White,
+                onBackground = Color.Black,
+                onSurface = Color.Black,
             )
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
+
+            MaterialTheme(
+                colorScheme = customColorScheme
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MainScreen()
+                }
+            }
+        }
     }
 }

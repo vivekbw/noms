@@ -6,4 +6,10 @@
     <string name="title_restaurants">Restaurants</string>
     <string name="title_social">Social</string>
     <string name="title_profile">Profile</string>
+	<string name="title_track">Track</string>
+	<string name="desc_track">Keep ranked lists and maps of every restaurant you\'ve been to and want to try</string>
+	<string name="title_share">Share</string>
+	<string name="desc_share">See where your friends are eating and what they love and hate</string>
+	<string name="title_discover">Discover</string>
+	<string name="desc_discover">Get personalized recommendations you are sure to love</string>
 </resources>
