@@ -44,3 +44,62 @@ fun RestaurantsScreen() {
         Text("Restaurants Screen")
     }
 }
+
+@Serializable
+data class User (
+    val id: Int,
+    val first_name: String,
+    val last_name: String,
+    val phone_number: String
+)
+
+@Composable
+fun UserList() {
+    val users = remember { mutableStateListOf<User>() }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val results = supabase.from("users").select().decodeList<User>()
+            users.addAll(results)
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(users) { user ->
+            UserCard(user)
+        }
+    }
+}
+
+@Composable
+fun UserCard(user: User) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "${user.first_name} ${user.last_name}",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF2E8B57)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = user.phone_number,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+        }
+    }
+}
