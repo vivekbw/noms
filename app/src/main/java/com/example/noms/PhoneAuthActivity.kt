@@ -16,8 +16,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +75,7 @@ fun PhoneAuthScreen(auth: FirebaseAuth) {
                 onValueChange = { phoneNumber = it },
                 label = { Text("Phone Number", color = seaGreen) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
+                colors = OutlinedTextFieldDefaults.colors (
                     focusedBorderColor = seaGreen, // Sea green when focused
                     unfocusedBorderColor = seaGreen // Sea green when not focused
                 )
@@ -100,7 +100,7 @@ fun PhoneAuthScreen(auth: FirebaseAuth) {
                 onValueChange = { verificationCode = it },
                 label = { Text("Verification Code", color = seaGreen) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
+                colors = OutlinedTextFieldDefaults.colors (
                     focusedBorderColor = seaGreen, // Sea green when focused
                     unfocusedBorderColor = seaGreen // Sea green when not focused
                 )
