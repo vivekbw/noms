@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.foundation.pager.PagerState
 
 class AuthComposeActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -60,7 +61,7 @@ fun AuthScreen(auth: FirebaseAuth) {
         Pair(R.string.title_share, R.string.desc_share),
         Pair(R.string.title_discover, R.string.desc_discover)
     )
-    val pagerState = rememberPagerState(0)
+    val pagerState = rememberPagerState(initialPage = 0)
 
     LaunchedEffect(auth) {
         if (auth.currentUser != null) {
@@ -111,7 +112,13 @@ fun AuthScreen(auth: FirebaseAuth) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FeatureCarousel(pagerState: androidx.compose.foundation.pager.PagerState, features: List<Pair<Int, Int>>) {
+fun rememberPagerState(initialPage: Int): PagerState {
+    return androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage)
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FeatureCarousel(pagerState: PagerState, features: List<Pair<Int, Int>>) {
     HorizontalPager(
         state = pagerState,
         pageCount = features.size,

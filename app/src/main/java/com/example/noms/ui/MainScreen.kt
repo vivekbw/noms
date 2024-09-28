@@ -15,7 +15,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,8 +47,8 @@ fun MainScreen() {
         topBar = {
             TopAppBar(
                 title = { Text("noms") },
-                colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = Color(0x2E8B57) // Sea green color
+                colors = topAppBarColors(
+                    containerColor = Color(0x2E8B57)
                 )
             )
         },
