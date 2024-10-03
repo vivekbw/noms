@@ -36,7 +36,27 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.Serializable
+import android.graphics.Bitmap
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
+
+import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.libraries.places.api.model.PhotoMetadata
+import kotlinx.coroutines.launch
+
+
 
 val supabase = createSupabaseClient(
     // both keys are meant to be exposed to client, so no security issues
@@ -55,26 +75,50 @@ val supabase = createSupabaseClient(
 //
 
 
+suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val placeFields = listOf(Place.Field.PHOTO_METADATAS)
+        val request = FetchPlaceRequest.newInstance(placeId, placeFields)
+        val response = placesClient.fetchPlace(request).await()
+        response.place.photoMetadatas?.firstOrNull()
+    }
+}
+
+suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val photoRequest = FetchPhotoRequest.builder(photoMetadata).build()
+        val response = placesClient.fetchPhoto(photoRequest).await()
+        response.bitmap
+    }
+}
+
+
+
 @Serializable
 data class Restaurant(
     val id: Int,
     val name: String,
     val description: String,
     val location: String,
-    val rating: Float
+    val rating: Float,
+    val placeId: String
 )
 
 @Composable
 fun RestaurantsScreen() {
+
     val restaurants = remember { mutableStateListOf<Restaurant>() }
+    val context = LocalContext.current
 
     // Simulate data fetching
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             // Replace with actual data fetching from Supabase or any other source
             val mockData = listOf(
-                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f),
-                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f)
+                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
+                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk")
             )
             restaurants.addAll(mockData)
         }
@@ -87,7 +131,7 @@ fun RestaurantsScreen() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(restaurants) { restaurant ->
-            RestaurantCard(restaurant) {
+            RestaurantCard(context, restaurant) {
                 println("Clicked on ${restaurant.name}")
             }
         }
@@ -96,13 +140,28 @@ fun RestaurantsScreen() {
 
 
 @Composable
-fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
+fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit) {
+    var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Card layout without showing image initially
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .height(150.dp)
-            .clickable { onClick() },
+            .clickable {
+                // Launch a coroutine to fetch the image
+                coroutineScope.launch {
+                    val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
+                    if (photoMetadata != null) {
+                        photoBitmap = fetchPhoto(context, photoMetadata)
+                    }
+                }
+                onClick()
+                showDialog = true // Show image dialog on click
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
@@ -110,7 +169,7 @@ fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween // Keep space between elements
         ) {
             Text(text = restaurant.name, style = MaterialTheme.typography.titleMedium, color = Color.Black)
             Text(text = restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
@@ -118,7 +177,36 @@ fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
             RatingBar(rating = restaurant.rating) // Display rating
         }
     }
+
+    // Show image dialog if showDialog is true and the photoBitmap is available
+    if (showDialog && photoBitmap != null) {
+        ImageDialog(photoBitmap!!) {
+            showDialog = false // Hide the dialog when dismissed
+        }
+    }
 }
+
+@Composable
+fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+//        title = { Text("Restaurant Image") },
+        text = {
+            Image(
+                bitmap = photoBitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+
 
 @Composable
 fun RatingBar(rating: Float) {

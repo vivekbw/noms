@@ -32,6 +32,7 @@ import com.example.noms.R
 import com.example.noms.ui.profile.ProfileScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
 import com.example.noms.ui.social.SocialScreen
+import com.google.android.libraries.places.api.Places
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
