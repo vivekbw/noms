@@ -1,5 +1,6 @@
 package com.example.noms.ui.restaurants
 
+import android.net.http.HttpResponseCache.install
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -37,6 +37,12 @@ import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.serialization.Serializable
 import android.graphics.Bitmap
 import com.google.android.libraries.places.api.Places
@@ -59,8 +65,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import com.google.android.libraries.places.api.model.PhotoMetadata
+import com.google.type.LatLng
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+
 
 
 val supabase = createSupabaseClient(
@@ -71,13 +79,27 @@ val supabase = createSupabaseClient(
     install(Postgrest)
 }
 
-//@Composable
-//fun RestaurantsScreen() {
-//    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//        Text("Restaurants Screen")
-//    }
-//}
-//
+// // Ahmed's
+// @Composable
+// fun RestaurantsScreen() {
+//     val waterloo = LatLng(43.4643, -80.5204)
+//     val cameraPositionState = rememberCameraPositionState {
+//         position = CameraPosition.fromLatLngZoom(waterloo, 10f)
+//     }
+
+//     Box(modifier = Modifier.fillMaxSize()) {
+//         GoogleMap(
+//             modifier = Modifier.fillMaxSize(),
+//             cameraPositionState = cameraPositionState
+//         ) {
+//             Marker(
+//                 state = MarkerState(position = waterloo),
+//                 title = "Waterloo",
+//                 snippet = "Marker in Waterloo"
+//             )
+//         }
+//     }
+// }
 
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
@@ -87,8 +109,9 @@ suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadat
         val request = FetchPlaceRequest.newInstance(placeId, placeFields)
         val response = placesClient.fetchPlace(request).await()
         response.place.photoMetadatas?.firstOrNull()
-    }
+	}
 }
+
 
 suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? {
     return withContext(Dispatchers.IO) {
@@ -111,117 +134,8 @@ data class Restaurant(
     val placeId: String
 )
 
+// Aiden's
 @Composable
-//fun RestaurantsScreen() {
-//
-//    val restaurants = remember { mutableStateListOf<Restaurant>() }
-//    val context = LocalContext.current
-//
-//    // Simulate data fetching
-//    LaunchedEffect(Unit) {
-//        withContext(Dispatchers.IO) {
-//            // Replace with actual data fetching from Supabase or any other source
-//            val mockData = listOf(
-//                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
-//                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk")
-//            )
-//            restaurants.addAll(mockData)
-//        }
-//    }
-//
-//    // Show the restaurant cards in a LazyColumn
-//    LazyColumn(
-//        modifier = Modifier.fillMaxSize(),
-//        contentPadding = PaddingValues(16.dp),
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
-//    ) {
-//        items(restaurants) { restaurant ->
-//            RestaurantCard(context, restaurant) {
-//                println("Clicked on ${restaurant.name}")
-//            }
-//        }
-//    }
-//}
-//fun RestaurantsScreen() {
-//    val restaurants = remember { mutableStateListOf<Restaurant>() }
-//    val context = LocalContext.current
-//
-//    // Simulate data fetching
-//    LaunchedEffect(Unit) {
-//        withContext(Dispatchers.IO) {
-//            // Replace with actual data fetching from Supabase or any other source
-//            val mockData = listOf(
-//                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
-//                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
-////                 Add more items to enable scrolling
-//                Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
-//                Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
-//                Restaurant(5, "Gols", "Chinese", "321 Maple St", 4.8f, "ChIJs-uUWrL1K4gRmr2UyfjqxBo")
-//            )
-//            restaurants.addAll(mockData)
-//        }
-//    }
-//
-//    val lazyListState = rememberLazyListState()
-//    val toolbarHeight = 200.dp
-//    val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
-//
-//    // Calculate the offset for the bottom toolbar based on scroll
-//    val toolbarOffsetHeightPx = remember {
-//        derivedStateOf {
-//            val offset = lazyListState.firstVisibleItemScrollOffset.toFloat()
-//            val maxOffset = toolbarHeightPx
-//            val calculatedOffset = maxOffset - offset
-//            if (calculatedOffset < 0f) 0f else calculatedOffset
-//        }
-//    }
-//
-//    Scaffold(
-//        modifier = Modifier.fillMaxSize(),
-//        content = { paddingValues ->
-//            Box(modifier = Modifier.fillMaxSize().padding(paddingValues))
-//            // Main content: List of restaurants
-//                LazyColumn(
-//                    state = lazyListState,
-//                    modifier = Modifier.fillMaxSize(),
-//                    contentPadding = PaddingValues(bottom = toolbarHeight) // Add padding for the toolbar
-//                ) {
-//                    items(restaurants) { restaurant ->
-//                        RestaurantCard(context, restaurant) {
-//                            println("Clicked on ${restaurant.name}")
-//                        }
-//                    }
-//                }
-//
-//            // Bottom collapsing toolbar
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize(),
-//                contentAlignment = Alignment.BottomCenter
-//            ) {
-//                // Inner Box for the toolbar
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(toolbarHeight)
-//                        .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.value.roundToInt()) }
-//                        .background(Color(0xFF6200EE)),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    // Toolbar content
-//                    Text(
-//                        text = "Discover New Restaurants",
-//                        color = Color.White,
-//                        style = MaterialTheme.typography.headlineSmall
-//                    )
-//                }
-//            }
-//
-//        }
-//    )
-//}
-
-//creates
 fun RestaurantsScreen() {
     val restaurants = remember { mutableStateListOf<Restaurant>() }
     val context = LocalContext.current
@@ -262,11 +176,28 @@ fun RestaurantsScreen() {
                         .background(Color.LightGray)
                 ) {
                     // You can place any content here, such as an image
-                    Text(
-                        text = "Noms",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+                    // Text(
+                    //     text = "Noms",
+                    //     modifier = Modifier.align(Alignment.Center),
+                    //     style = MaterialTheme.typography.headlineSmall
+                    // )
+					val waterloo = LatLng(43.4643, -80.5204)
+					val cameraPositionState = rememberCameraPositionState {
+						position = CameraPosition.fromLatLngZoom(waterloo, 10f)
+					}
+
+					Box(modifier = Modifier.fillMaxSize()) {
+						GoogleMap(
+							modifier = Modifier.fillMaxSize(),
+							cameraPositionState = cameraPositionState
+						) {
+							Marker(
+								state = MarkerState(position = waterloo),
+								title = "Waterloo",
+								snippet = "Marker in Waterloo"
+							)
+						}
+					}
                 }
 
                 // Restaurant list starting from the bottom half
