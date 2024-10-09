@@ -54,6 +54,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -141,6 +142,86 @@ data class Restaurant(
 //        }
 //    }
 //}
+//fun RestaurantsScreen() {
+//    val restaurants = remember { mutableStateListOf<Restaurant>() }
+//    val context = LocalContext.current
+//
+//    // Simulate data fetching
+//    LaunchedEffect(Unit) {
+//        withContext(Dispatchers.IO) {
+//            // Replace with actual data fetching from Supabase or any other source
+//            val mockData = listOf(
+//                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
+//                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
+////                 Add more items to enable scrolling
+//                Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
+//                Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
+//                Restaurant(5, "Gols", "Chinese", "321 Maple St", 4.8f, "ChIJs-uUWrL1K4gRmr2UyfjqxBo")
+//            )
+//            restaurants.addAll(mockData)
+//        }
+//    }
+//
+//    val lazyListState = rememberLazyListState()
+//    val toolbarHeight = 200.dp
+//    val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
+//
+//    // Calculate the offset for the bottom toolbar based on scroll
+//    val toolbarOffsetHeightPx = remember {
+//        derivedStateOf {
+//            val offset = lazyListState.firstVisibleItemScrollOffset.toFloat()
+//            val maxOffset = toolbarHeightPx
+//            val calculatedOffset = maxOffset - offset
+//            if (calculatedOffset < 0f) 0f else calculatedOffset
+//        }
+//    }
+//
+//    Scaffold(
+//        modifier = Modifier.fillMaxSize(),
+//        content = { paddingValues ->
+//            Box(modifier = Modifier.fillMaxSize().padding(paddingValues))
+//            // Main content: List of restaurants
+//                LazyColumn(
+//                    state = lazyListState,
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentPadding = PaddingValues(bottom = toolbarHeight) // Add padding for the toolbar
+//                ) {
+//                    items(restaurants) { restaurant ->
+//                        RestaurantCard(context, restaurant) {
+//                            println("Clicked on ${restaurant.name}")
+//                        }
+//                    }
+//                }
+//
+//            // Bottom collapsing toolbar
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize(),
+//                contentAlignment = Alignment.BottomCenter
+//            ) {
+//                // Inner Box for the toolbar
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(toolbarHeight)
+//                        .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.value.roundToInt()) }
+//                        .background(Color(0xFF6200EE)),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    // Toolbar content
+//                    Text(
+//                        text = "Discover New Restaurants",
+//                        color = Color.White,
+//                        style = MaterialTheme.typography.headlineSmall
+//                    )
+//                }
+//            }
+//
+//        }
+//    )
+//}
+
+//creates
 fun RestaurantsScreen() {
     val restaurants = remember { mutableStateListOf<Restaurant>() }
     val context = LocalContext.current
@@ -152,38 +233,50 @@ fun RestaurantsScreen() {
             val mockData = listOf(
                 Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
                 Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
-//                 Add more items to enable scrolling
+                // Add more items to enable scrolling
                 Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
                 Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
                 Restaurant(5, "Gols", "Chinese", "321 Maple St", 4.8f, "ChIJs-uUWrL1K4gRmr2UyfjqxBo")
+                // ... add more restaurants as needed
             )
             restaurants.addAll(mockData)
         }
     }
 
-    val lazyListState = rememberLazyListState()
-    val toolbarHeight = 200.dp
-    val toolbarHeightPx = with(LocalDensity.current) { toolbarHeight.toPx() }
-
-    // Calculate the offset for the bottom toolbar based on scroll
-    val toolbarOffsetHeightPx = remember {
-        derivedStateOf {
-            val offset = lazyListState.firstVisibleItemScrollOffset.toFloat()
-            val maxOffset = toolbarHeightPx
-            val calculatedOffset = maxOffset - offset
-            if (calculatedOffset < 0f) 0f else calculatedOffset
-        }
-    }
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val halfScreenHeight = screenHeight / 2
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         content = { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues))
-            // Main content: List of restaurants
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Background content (e.g., image or color)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.LightGray)
+                ) {
+                    // You can place any content here, such as an image
+                    Text(
+                        text = "Noms",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+
+                // Restaurant list starting from the bottom half
                 LazyColumn(
-                    state = lazyListState,
+                    state = rememberLazyListState(),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = toolbarHeight) // Add padding for the toolbar
+                    contentPadding = PaddingValues(
+                        top = halfScreenHeight,
+                        bottom = 16.dp // Adjust as needed
+                    )
                 ) {
                     items(restaurants) { restaurant ->
                         RestaurantCard(context, restaurant) {
@@ -191,31 +284,7 @@ fun RestaurantsScreen() {
                         }
                     }
                 }
-
-            // Bottom collapsing toolbar
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                // Inner Box for the toolbar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(toolbarHeight)
-                        .offset { IntOffset(x = 0, y = toolbarOffsetHeightPx.value.roundToInt()) }
-                        .background(Color(0xFF6200EE)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Toolbar content
-                    Text(
-                        text = "Discover New Restaurants",
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
             }
-
         }
     )
 }
