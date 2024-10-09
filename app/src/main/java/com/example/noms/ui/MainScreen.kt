@@ -3,6 +3,7 @@ package com.example.noms.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,7 +33,6 @@ import com.example.noms.R
 import com.example.noms.ui.profile.ProfileScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
 import com.example.noms.ui.social.SocialScreen
-import com.google.android.libraries.places.api.Places
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,33 +60,38 @@ fun MainScreen() {
                     .padding(16.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                NavigationBar(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)  // This makes it take 60% of the screen width
+                        .fillMaxWidth(0.8f)
                         .clip(RoundedCornerShape(24.dp))
-                        .border(2.dp, Color.Black, RoundedCornerShape(45.dp))
-                        .background(Color(0x2E8B57))
-                        .height(64.dp),
-                    containerColor = Color.Transparent
+                        .border(2.dp, Color.Black, RoundedCornerShape(24.dp))
+                        .background(Color.White)
+                        .height(64.dp)
                 ) {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = navBackStackEntry?.destination?.route
-                    items.forEach { (route, icon, label) ->
-                        NavigationBarItem(
-                            icon = { Icon(painter = painterResource(id = icon), contentDescription = label) },
-                            selected = currentRoute == route,
-                            onClick = {
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.startDestinationId)
-                                    launchSingleTop = true
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color.White,
-                                unselectedIconColor = Color.Black,
-                                indicatorColor = Color(0x2E8B57)
+                    NavigationBar(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        containerColor = Color.Transparent
+                    ) {
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackStackEntry?.destination?.route
+                        items.forEach { (route, icon, label) ->
+                            NavigationBarItem(
+                                icon = { Icon(painter = painterResource(id = icon), contentDescription = label) },
+                                selected = currentRoute == route,
+                                onClick = {
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.startDestinationId)
+                                        launchSingleTop = true
+                                    }
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Color(0xFF2E8B57),
+                                    unselectedIconColor = Color.Black,
+                                    indicatorColor = Color.White
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
