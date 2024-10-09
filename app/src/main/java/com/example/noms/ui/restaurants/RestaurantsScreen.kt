@@ -1,6 +1,10 @@
 package com.example.noms.ui.restaurants
 
-import android.net.http.HttpResponseCache.install
+import android.content.Context
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,62 +18,53 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.foundation.clickable
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.tasks.await
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.PhotoMetadata
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.serialization.Serializable
-import android.graphics.Bitmap
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FetchPlaceRequest
-import com.google.android.libraries.places.api.net.FetchPhotoRequest
-
-import android.content.Context
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
-import com.google.android.libraries.places.api.model.PhotoMetadata
-import com.google.type.LatLng
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
-
-
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 
 val supabase = createSupabaseClient(
     // both keys are meant to be exposed to client, so no security issues
@@ -78,29 +73,6 @@ val supabase = createSupabaseClient(
 ) {
     install(Postgrest)
 }
-
-// // Ahmed's
-// @Composable
-// fun RestaurantsScreen() {
-//     val waterloo = LatLng(43.4643, -80.5204)
-//     val cameraPositionState = rememberCameraPositionState {
-//         position = CameraPosition.fromLatLngZoom(waterloo, 10f)
-//     }
-
-//     Box(modifier = Modifier.fillMaxSize()) {
-//         GoogleMap(
-//             modifier = Modifier.fillMaxSize(),
-//             cameraPositionState = cameraPositionState
-//         ) {
-//             Marker(
-//                 state = MarkerState(position = waterloo),
-//                 title = "Waterloo",
-//                 snippet = "Marker in Waterloo"
-//             )
-//         }
-//     }
-// }
-
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
@@ -135,6 +107,7 @@ data class Restaurant(
 )
 
 // Aiden's
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantsScreen() {
     val restaurants = remember { mutableStateListOf<Restaurant>() }
@@ -147,77 +120,65 @@ fun RestaurantsScreen() {
             val mockData = listOf(
                 Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
                 Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
-                // Add more items to enable scrolling
                 Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
                 Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
                 Restaurant(5, "Gols", "Chinese", "321 Maple St", 4.8f, "ChIJs-uUWrL1K4gRmr2UyfjqxBo")
-                // ... add more restaurants as needed
             )
             restaurants.addAll(mockData)
         }
     }
 
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val halfScreenHeight = screenHeight / 2
+    val waterloo = LatLng(43.4643, -80.5204)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(waterloo, 10f)
+    }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
+
+    BottomSheetScaffold(
+        scaffoldState = bottomSheetScaffoldState,
+        sheetContent = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+//                contentPadding = PaddingValues(16.dp)
             ) {
-                // Background content (e.g., image or color)
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.LightGray)
-                ) {
-                    // You can place any content here, such as an image
-                    // Text(
-                    //     text = "Noms",
-                    //     modifier = Modifier.align(Alignment.Center),
-                    //     style = MaterialTheme.typography.headlineSmall
-                    // )
-					val waterloo = LatLng(43.4643, -80.5204)
-					val cameraPositionState = rememberCameraPositionState {
-						position = CameraPosition.fromLatLngZoom(waterloo, 10f)
-					}
-
-					Box(modifier = Modifier.fillMaxSize()) {
-						GoogleMap(
-							modifier = Modifier.fillMaxSize(),
-							cameraPositionState = cameraPositionState
-						) {
-							Marker(
-								state = MarkerState(position = waterloo),
-								title = "Waterloo",
-								snippet = "Marker in Waterloo"
-							)
-						}
-					}
-                }
-
-                // Restaurant list starting from the bottom half
-                LazyColumn(
-                    state = rememberLazyListState(),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = halfScreenHeight,
-                        bottom = 16.dp // Adjust as needed
-                    )
-                ) {
-                    items(restaurants) { restaurant ->
-                        RestaurantCard(context, restaurant) {
-                            println("Clicked on ${restaurant.name}")
-                        }
+                items(restaurants) { restaurant ->
+                    RestaurantCard(context, restaurant) {
+                        println("Clicked on ${restaurant.name}")
                     }
                 }
             }
+        },
+        sheetPeekHeight = 200.dp
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            GoogleMap(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { _ ->
+                            coroutineScope.launch {
+                                if (bottomSheetScaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
+                                    bottomSheetScaffoldState.bottomSheetState.partialExpand()
+                                }
+                            }
+                        }
+                    },
+                cameraPositionState = cameraPositionState
+            ) {
+                Marker(
+                    state = MarkerState(position = waterloo),
+                    title = "Waterloo",
+                    snippet = "Marker in Waterloo"
+                )
+            }
         }
-    )
+    }
 }
 
 
@@ -298,7 +259,7 @@ fun RatingBar(rating: Float) {
             Icon(
                 imageVector = if (index < rating.toInt()) Icons.Filled.Star else Icons.Outlined.Star,
                 contentDescription = "Star",
-                tint = Color.Yellow,
+                tint = Color(0xFF2E8B57),
                 modifier = Modifier.size(20.dp)
             )
         }

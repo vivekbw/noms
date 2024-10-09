@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,34 +37,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
-import androidx.compose.foundation.pager.PagerState
 
 class AuthComposeActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
+    private val bypassAuth = false // TODO: SET THIS TO TRUE, TO SKIP AUTH FOR TESTING
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
 
         setContent {
-            AuthScreen(auth)
+            AuthScreen(auth, bypassAuth)
         }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AuthScreen(auth: FirebaseAuth) {
+fun AuthScreen(auth: FirebaseAuth, bypassAuth: Boolean) {
     val context = LocalContext.current
     val features = listOf(
         Pair(R.string.title_track, R.string.desc_track),
         Pair(R.string.title_share, R.string.desc_share),
         Pair(R.string.title_discover, R.string.desc_discover)
     )
-    val pagerState = rememberPagerState(initialPage = 0)
 
     LaunchedEffect(auth) {
-        if (auth.currentUser != null) {
+        if (auth.currentUser != null || bypassAuth) {
             context.startActivity(Intent(context, MainActivity::class.java))
             (context as? ComponentActivity)?.finish()
         }
@@ -86,42 +85,50 @@ fun AuthScreen(auth: FirebaseAuth) {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            FeatureCarousel(pagerState, features)
-
             DotsIndicator(
                 totalDots = features.size,
-                selectedIndex = pagerState.currentPage
+                selectedIndex = 0
             )
 
             Spacer(modifier = Modifier.height(26.dp))
 
             GetStartedButton {
-                context.startActivity(Intent(context, PhoneAuthActivity::class.java))
+                if (bypassAuth) {
+                    context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    context.startActivity(Intent(context, PhoneAuthActivity::class.java))
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             LoginText {
-				context.startActivity(Intent(context, PhoneAuthActivity::class.java))
-			}
+                if (bypassAuth) {
+                    context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    context.startActivity(Intent(context, PhoneAuthActivity::class.java))
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun rememberPagerState(initialPage: Int): PagerState {
-    return androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage)
-}
+//@OptIn(ExperimentalFoundationApi::class)
+//@Composable
+//fun rememberPagerState(initialPage: Int): PagerState {
+//    return rememberPagerState(initialPage = initialPage)
+//}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FeatureCarousel(pagerState: PagerState, features: List<Pair<Int, Int>>) {
     HorizontalPager(
         state = pagerState,
-        pageCount = features.size,
+        beyondBoundsPageCount = features.size,
         modifier = Modifier
             .height(150.dp)
             .width(width = 340.dp)
