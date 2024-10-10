@@ -21,4 +21,4 @@
 - [Design Proposal](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Design-Proposal)
 
 # Releases
-- [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/blob/main/app/release/app-release.apk?ref_type=heads)
+- [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
