@@ -108,4 +108,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
     implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
     implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion")
+
+    // Firebase Remote Config (to score secrets remotely)
+	implementation("com.google.firebase:firebase-config-ktx")
 }
