@@ -3,6 +3,7 @@ package com.example.noms.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,11 +46,12 @@ fun MainScreen() {
     )
     
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("noms") },
                 colors = topAppBarColors(
-                    containerColor = Color(0x2E8B57)
+                    containerColor = Color.White
                 )
             )
         },
@@ -57,12 +59,13 @@ fun MainScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(Color.Transparent)
                     .padding(16.dp),
-                contentAlignment = Alignment.BottomCenter
+                contentAlignment = Alignment.BottomCenter,
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.8f)
+                        .fillMaxWidth(0.66f)
                         .clip(RoundedCornerShape(24.dp))
                         .border(2.dp, Color.Black, RoundedCornerShape(24.dp))
                         .background(Color.White)
@@ -97,10 +100,20 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = "Restaurants", Modifier.padding(innerPadding)) {
-            composable("Restaurants") { RestaurantsScreen() }
-            composable("Social") { SocialScreen() }
-            composable("Profile") { ProfileScreen(navController) }
+        NavHost(
+            navController,
+            startDestination = "Restaurants",
+            Modifier.padding(
+                PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = 0.dp // Exclude bottom padding
+                )
+            )
+        ) {
+            composable("Restaurants") { RestaurantsScreen(innerPadding = innerPadding) }
+            composable("Social") { SocialScreen(innerPadding = innerPadding) }
+            composable("Profile") { ProfileScreen(navController, innerPadding = innerPadding) }
         }
+
     }
 }
