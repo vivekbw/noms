@@ -145,7 +145,6 @@ fun RestaurantsScreen() {
             ) {
                 items(restaurants) { restaurant ->
                     RestaurantCard(context, restaurant) {
-//                        navController.navigate("restaurantDetail/${restaurant.id}")
                         println("Clicked on ${restaurant.name}")
                     }
                 }
