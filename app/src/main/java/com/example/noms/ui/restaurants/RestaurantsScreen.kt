@@ -288,7 +288,10 @@ fun UserList() {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            bottom = 180.dp
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = 100.dp
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
