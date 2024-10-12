@@ -12,4 +12,6 @@
 	<string name="desc_share">See where your friends are eating and what they love and hate</string>
 	<string name="title_discover">Discover</string>
 	<string name="desc_discover">Get personalized recommendations you are sure to love</string>
+	<string name="google_maps_key">@string/remote_config_maps_api_key</string>
+	<string name="remote_config_maps_api_key">maps_api_key</string>
 </resources>
