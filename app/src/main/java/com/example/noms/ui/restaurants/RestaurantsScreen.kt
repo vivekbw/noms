@@ -53,6 +53,8 @@ import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -65,8 +67,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.remoteconfig.ktx.remoteConfig
 
 val remoteConfig = Firebase.remoteConfig
 val supabase = createSupabaseClient(
@@ -111,7 +111,7 @@ data class Restaurant(
 // Aiden's
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestaurantsScreen() {
+fun RestaurantsScreen(innerPadding: PaddingValues) {
     val restaurants = remember { mutableStateListOf<Restaurant>() }
     val context = LocalContext.current
 
@@ -143,7 +143,7 @@ fun RestaurantsScreen() {
         sheetContent = {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-//                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 items(restaurants) { restaurant ->
                     RestaurantCard(context, restaurant) {
@@ -235,7 +235,6 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
 fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-//        title = { Text("Restaurant Image") },
         text = {
             Image(
                 bitmap = photoBitmap.asImageBitmap(),
@@ -255,7 +254,6 @@ fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {
 
 @Composable
 fun RatingBar(rating: Float) {
-    // Simplified rating bar: display stars based on the rating
     Row {
         repeat(5) { index ->
             Icon(
@@ -289,7 +287,9 @@ fun UserList() {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(
+            bottom = 180.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(users) { user ->
