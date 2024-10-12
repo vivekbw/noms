@@ -145,6 +145,7 @@ fun RestaurantsScreen() {
             ) {
                 items(restaurants) { restaurant ->
                     RestaurantCard(context, restaurant) {
+//                        navController.navigate("restaurantDetail/${restaurant.id}")
                         println("Clicked on ${restaurant.name}")
                     }
                 }
@@ -182,18 +183,28 @@ fun RestaurantsScreen() {
 }
 
 
+
 @Composable
 fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit) {
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    var showReviews by remember { mutableStateOf(false) } // State for showing reviews
     val coroutineScope = rememberCoroutineScope()
+
+    // Mock reviews data (to be replaced with actual data)
+    val reviews = listOf(
+        Review("Ahmed Ahmed", 4.5f, "What a great Spot Would recommend to everyone"),
+        Review("John Doe", 4.0f, "Tasty food, friendly service."),
+        Review("Jane Smith", 5.0f, "Excellent place! Best in town."),
+        Review("Emily Davis", 3.5f, "Good food, but slow service."),
+    )
 
     // Card layout without showing image initially
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .height(150.dp)
+            .padding(12.dp)
+            .height(190.dp)
             .clickable {
                 // Launch a coroutine to fetch the image
                 coroutineScope.launch {
@@ -205,19 +216,23 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
                 onClick()
                 showDialog = true // Show image dialog on click
             },
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween // Keep space between elements
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = restaurant.name, style = MaterialTheme.typography.titleMedium, color = Color.Black)
-            Text(text = restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-            Text(text = "Location: ${restaurant.location}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+            Text(text = restaurant.name, style = MaterialTheme.typography.titleMedium, color = Color.Black,  modifier = Modifier.padding(bottom = 8.dp))
+            Text(text = restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray,  modifier = Modifier.padding(bottom = 8.dp))
+            Text(text = "Location: ${restaurant.location}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray,  modifier = Modifier.padding(bottom = 8.dp))
             RatingBar(rating = restaurant.rating) // Display rating
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = { showReviews = true }) { // Button to show reviews
+                Text("Show Reviews")
+            }
         }
     }
 
@@ -227,7 +242,56 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
             showDialog = false // Hide the dialog when dismissed
         }
     }
+
+    // Show reviews dialog if showReviews is true
+    if (showReviews) {
+        ReviewsDialog(reviews) {
+            showReviews = false // Hide reviews dialog when dismissed
+        }
+    }
 }
+
+@Composable
+fun ReviewsDialog(reviews: List<Review>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = {
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                items(reviews) { review ->
+                    ReviewCard(review)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+fun ReviewCard(review: Review) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(text = review.name, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
+            RatingBar(rating = review.rating) // Show rating as stars
+            Text(text = review.comment, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        }
+    }
+}
+
+data class Review(val name: String, val rating: Float, val comment: String)
+
 
 @Composable
 fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {

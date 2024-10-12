@@ -98,7 +98,7 @@ fun MainScreen() {
         }
     ) { innerPadding ->
         NavHost(navController, startDestination = "Restaurants", Modifier.padding(innerPadding)) {
-            composable("Restaurants") { RestaurantsScreen() }
+            composable("Restaurants") {  RestaurantsScreen() }
             composable("Social") { SocialScreen() }
             composable("Profile") { ProfileScreen(navController) }
         }
