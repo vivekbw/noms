@@ -13,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.noms.ui.MainScreen
 import com.google.android.libraries.places.api.Places
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 
 
 class MainActivity : ComponentActivity() {
@@ -35,8 +39,51 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 if (!Places.isInitialized()) {
                     try {
-                        Places.initialize(applicationContext, "AIzaSyDA0NJYciapVsDwGoZPA69UDaJAhzOmstE")
-                        Log.d("PlacesAPI", "Places API initialized successfully.")
+                        val remoteConfig = FirebaseRemoteConfig.getInstance()
+                        val configSettings = FirebaseRemoteConfigSettings.Builder()
+                            .setMinimumFetchIntervalInSeconds(3600)
+                            .build()
+                        remoteConfig.setConfigSettingsAsync(configSettings)
+                        remoteConfig.setDefaultsAsync(mapOf(
+                            "supabase_url" to "",
+                            "supabase_key" to "",
+                            "places_api_key" to "",
+                            "google_maps_key" to "",
+                        ))
+
+                        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                Log.d("RemoteConfig", "Config params updated: ${task.result}")
+                                Log.d("RemoteConfig", "Supabase URL: ${remoteConfig.getString("supabase_url")}")
+                                Log.d("RemoteConfig", "Supabase Key: ${remoteConfig.getString("supabase_key")}")
+                                Log.d("RemoteConfig", "Places API Key: ${remoteConfig.getString("places_api_key")}")
+                                Log.d("RemoteConfig", "Google Maps Key: ${remoteConfig.getString("google_maps_key")}")
+
+                                val mapsApiKey = remoteConfig.getString("google_maps_key")
+                                if (mapsApiKey.isNotEmpty()) {
+                                    Places.initialize(applicationContext, mapsApiKey)
+                                    Log.d("PlacesAPI", "Places API initialized successfully.")
+                                } else {
+                                    Log.e("PlacesAPI", "Google Maps API key is empty")
+                                }
+
+                                val supabaseUrl = remoteConfig.getString("supabase_url")
+                                val supabaseKey = remoteConfig.getString("supabase_key")
+                                if (supabaseUrl.isNotEmpty() && supabaseKey.isNotEmpty()) {
+                                    val supabase = createSupabaseClient(
+                                        supabaseUrl = supabaseUrl,
+                                        supabaseKey = supabaseKey
+                                    ) {
+                                        install(Postgrest)
+                                    }
+                                    Log.d("Supabase", "Supabase client initialized successfully.")
+                                } else {
+                                    Log.e("Supabase", "Supabase URL or key is empty")
+                                }
+                            } else {
+                                Log.e("RemoteConfig", "Fetch failed")
+                            }
+                        }
                     } catch (e: Exception) {
                         Log.e("PlacesAPI", "Error initializing Places API: ${e.message}")
                     }

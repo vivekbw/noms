@@ -19,3 +19,7 @@
 - [Team Contract](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Team-Contract)
 - [Project Proposal](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Project-Proposal)
 - [Design Proposal](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Design-Proposal)
+- [Meeting Minutes](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Sprint-1-meeting-minutes---M4)
+
+# Releases
+- [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
