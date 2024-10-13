@@ -2,6 +2,8 @@ package com.example.noms
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
@@ -12,10 +14,10 @@ import java.util.Date
 import java.time.LocalDate.*
 import java.time.format.DateTimeFormatter
 
+val remoteConfig = Firebase.remoteConfig
 val supabase = createSupabaseClient(
-    // both keys are meant to be exposed to client, so no security issues
-    supabaseUrl = "https://xoffilinikbhnlvdfaib.supabase.co",
-    supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZmZpbGluaWtiaG5sdmRmYWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0OTYxMzEsImV4cCI6MjA0MzA3MjEzMX0.2x8XkQS3ahCmYJJHSn6581ki2wh4-mbcWzBEUEmGtu0"
+    supabaseUrl = remoteConfig.getString("supabase_url"),
+    supabaseKey = remoteConfig.getString("supabase_key")
 ) {
     install(Postgrest)
 }
@@ -39,7 +41,10 @@ data class Follow (
 data class Restaurant(
     val id: Int,
     val name: String,
-    val location: String        // will need to change
+    val location: String,        // will need to change
+    val rating: Float,
+    val placeId: String,
+    val description: String
 )
 
 @Serializable
@@ -52,13 +57,34 @@ data class Review(
     val rating: Int
 )
 
-suspend fun getUsers(uid: Int): User {
+suspend fun getUser(uid: Int): User {
     val result = supabase.from("users").select(){
         filter {
             eq("id", uid)
         }
     }.decodeSingle<User>()
     return result
+}
+
+// only used for demo
+suspend fun getAllUsers(): List<User>{
+    val result = supabase.from("users").select().decodeList<User>()
+    return result
+}
+
+suspend fun getFollowers(uid: Int): List<User> {
+    val followerList = supabase.from("followers").select(){
+        filter {
+            eq("followee_id", uid)
+        }
+    }.decodeList<Follow>()
+    val listFollowerIds: List<Int> = followerList.map { it.follower_id }
+    val followers = supabase.from("users").select(){
+        filter {
+            isIn("id", listFollowerIds)
+        }
+    }.decodeList<User>()
+    return followers
 }
 
 suspend fun doesFollow(currUser: Int, followId: Int): Boolean{
@@ -96,4 +122,9 @@ suspend fun getFollowerCount(uid: Int): Int {
         }
     }.decodeList<Follow>()
     return followercount.size
+}
+
+suspend fun getAllRestaurants(): List<Restaurant>{
+    val restaurants = supabase.from("restaurants").select().decodeList<Restaurant>()
+    return restaurants
 }

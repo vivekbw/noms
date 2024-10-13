@@ -67,14 +67,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-
-val remoteConfig = Firebase.remoteConfig
-val supabase = createSupabaseClient(
-    supabaseUrl = remoteConfig.getString("supabase_url"),
-    supabaseKey = remoteConfig.getString("supabase_key")
-) {
-    install(Postgrest)
-}
+import com.example.noms.*
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
@@ -96,18 +89,6 @@ suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? 
     }
 }
 
-
-
-@Serializable
-data class Restaurant(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val location: String,
-    val rating: Float,
-    val placeId: String
-)
-
 // Aiden's
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,15 +99,9 @@ fun RestaurantsScreen(innerPadding: PaddingValues) {
     // Simulate data fetching
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            // Replace with actual data fetching from Supabase or any other source
-            val mockData = listOf(
-                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
-                Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
-                Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
-                Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
-                Restaurant(5, "Gols", "Chinese", "321 Maple St", 4.8f, "ChIJs-uUWrL1K4gRmr2UyfjqxBo")
-            )
-            restaurants.addAll(mockData)
+            // Karthik: Replaced with real data
+            val realData = getAllRestaurants()
+            restaurants.addAll(realData)
         }
     }
 
@@ -250,8 +225,6 @@ fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {
     )
 }
 
-
-
 @Composable
 fun RatingBar(rating: Float) {
     Row {
@@ -266,21 +239,12 @@ fun RatingBar(rating: Float) {
     }
 }
 
-
-@Serializable
-data class User (
-    val id: Int,
-    val first_name: String,
-    val last_name: String,
-    val phone_number: String
-)
-
 @Composable
 fun UserList() {
     val users = remember { mutableStateListOf<User>() }
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            val results = supabase.from("users").select().decodeList<User>()
+            val results = getAllUsers()
             users.addAll(results)
         }
     }
