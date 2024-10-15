@@ -68,6 +68,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import com.example.noms.*
+import com.google.android.gms.maps.CameraUpdateFactory
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
@@ -93,25 +94,42 @@ suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantsScreen(innerPadding: PaddingValues) {
-    val restaurants = remember { mutableStateListOf<Restaurant>() }
     val context = LocalContext.current
-
-    // Simulate data fetching
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            // Karthik: Replaced with real data
-            val realData = getAllRestaurants()
-            restaurants.addAll(realData)
-        }
+    val waterloo = LatLng(43.4643, -80.5204)
+    val toronto = LatLng(43.6532, -79.3832)
+    
+    // Test data for restaurants in Waterloo and Toronto
+    val allRestaurants = remember {
+        listOf(
+            Restaurant("1", "Bauer Kitchen", "The Bauer Kitchen", LatLng(43.4639, -80.5228), 4.3f),
+            Restaurant("2", "Proof Kitchen", "Proof Kitchen and Lounge", LatLng(43.4606, -80.5242), 4.2f),
+            Restaurant("3", "Ethel's Lounge", "Ethel's Lounge", LatLng(43.4659, -80.5233), 4.4f),
+            Restaurant("4", "Wildcraft", "Wildcraft Grill + Long Bar", LatLng(43.4577, -80.5384), 4.1f),
+            Restaurant("5", "Morty's Pub", "Morty's Pub", LatLng(43.4730, -80.5384), 4.0f),
+            Restaurant("6", "CN Tower 360 Restaurant", "Revolving restaurant with city views", LatLng(43.6425, -79.3873), 4.5f),
+            Restaurant("7", "St. Lawrence Market", "Historic food market", LatLng(43.6488, -79.3715), 4.6f),
+            Restaurant("8", "Kensington Market", "Eclectic neighborhood with diverse food options", LatLng(43.6547, -79.4025), 4.4f),
+            Restaurant("9", "Alo Restaurant", "Fine dining experience", LatLng(43.6479, -79.3962), 4.8f),
+            Restaurant("10", "Pai Northern Thai Kitchen", "Authentic Thai cuisine", LatLng(43.6479, -79.3889), 4.5f)
+        )
     }
 
-    val waterloo = LatLng(43.4643, -80.5204)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(waterloo, 10f)
+        position = CameraPosition.fromLatLngZoom(waterloo, 11f)
     }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
+
+    var visibleRestaurants by remember { mutableStateOf(allRestaurants) }
+
+    LaunchedEffect(cameraPositionState.position) {
+        visibleRestaurants = allRestaurants.filter { restaurant ->
+            val latDiff = Math.abs(restaurant.location.latitude - cameraPositionState.position.target.latitude)
+            val lngDiff = Math.abs(restaurant.location.longitude - cameraPositionState.position.target.longitude)
+            latDiff < 0.1 && lngDiff < 0.1
+        }
+    }
 
     BottomSheetScaffold(
         scaffoldState = bottomSheetScaffoldState,
@@ -120,9 +138,14 @@ fun RestaurantsScreen(innerPadding: PaddingValues) {
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
-                items(restaurants) { restaurant ->
+                items(visibleRestaurants) { restaurant ->
                     RestaurantCard(context, restaurant) {
-                        println("Clicked on ${restaurant.name}")
+                        coroutineScope.launch {
+                            cameraPositionState.animate(
+                                update = CameraUpdateFactory.newLatLngZoom(restaurant.location, 15f),
+                                durationMs = 1000
+                            )
+                        }
                     }
                 }
             }
@@ -148,40 +171,34 @@ fun RestaurantsScreen(innerPadding: PaddingValues) {
                     },
                 cameraPositionState = cameraPositionState
             ) {
-                Marker(
-                    state = MarkerState(position = waterloo),
-                    title = "Waterloo",
-                    snippet = "Marker in Waterloo"
-                )
+                visibleRestaurants.forEach { restaurant ->
+                    Marker(
+                        state = MarkerState(position = restaurant.location),
+                        title = restaurant.name,
+                        snippet = "Rating: ${restaurant.rating}"
+                    )
+                }
             }
         }
     }
 }
 
+data class Restaurant(
+    val placeId: String,
+    val name: String,
+    val description: String,
+    val location: LatLng,
+    val rating: Float
+)
 
 @Composable
 fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit) {
-    var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var showDialog by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-
-    // Card layout without showing image initially
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .height(150.dp)
-            .clickable {
-                // Launch a coroutine to fetch the image
-                coroutineScope.launch {
-                    val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
-                    if (photoMetadata != null) {
-                        photoBitmap = fetchPhoto(context, photoMetadata)
-                    }
-                }
-                onClick()
-                showDialog = true // Show image dialog on click
-            },
+            .height(100.dp)
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
@@ -189,19 +206,11 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween // Keep space between elements
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = restaurant.name, style = MaterialTheme.typography.titleMedium, color = Color.Black)
             Text(text = restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-            Text(text = "Location: ${restaurant.location}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-            RatingBar(rating = restaurant.rating) // Display rating
-        }
-    }
-
-    // Show image dialog if showDialog is true and the photoBitmap is available
-    if (showDialog && photoBitmap != null) {
-        ImageDialog(photoBitmap!!) {
-            showDialog = false // Hide the dialog when dismissed
+            RatingBar(rating = restaurant.rating)
         }
     }
 }

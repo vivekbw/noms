@@ -39,12 +39,14 @@ data class Follow (
 
 @Serializable
 data class Restaurant(
-    val id: Int,
+    val id: String,
     val name: String,
-    val location: String,        // will need to change
+    val location: String,
     val rating: Float,
     val placeId: String,
-    val description: String
+    val description: String,
+    val latitude: Double,
+    val longitude: Double
 )
 
 @Serializable
