@@ -3,6 +3,7 @@ package com.example.noms.ui.restaurants
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
@@ -28,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -69,6 +73,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import com.example.noms.*
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.model.TypeFilter
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
@@ -131,52 +138,114 @@ fun RestaurantsScreen(innerPadding: PaddingValues) {
         }
     }
 
-    BottomSheetScaffold(
-        scaffoldState = bottomSheetScaffoldState,
-        sheetContent = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 100.dp)
-            ) {
-                items(visibleRestaurants) { restaurant ->
-                    RestaurantCard(context, restaurant) {
-                        coroutineScope.launch {
-                            cameraPositionState.animate(
-                                update = CameraUpdateFactory.newLatLngZoom(restaurant.location, 15f),
-                                durationMs = 1000
-                            )
+    var searchQuery by remember { mutableStateOf(TextFieldValue()) }
+    var searchResults by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { newValue ->
+                searchQuery = newValue
+                coroutineScope.launch {
+                    searchResults = searchPlaces(context, newValue.text)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            placeholder = { Text("Search for restaurants") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+        )
+
+        BottomSheetScaffold(
+            scaffoldState = bottomSheetScaffoldState,
+            sheetContent = {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = 100.dp)
+                ) {
+                    items(visibleRestaurants) { restaurant ->
+                        RestaurantCard(context, restaurant) {
+                            coroutineScope.launch {
+                                cameraPositionState.animate(
+                                    update = CameraUpdateFactory.newLatLngZoom(restaurant.location, 15f),
+                                    durationMs = 1000
+                                )
+                            }
                         }
                     }
                 }
-            }
-        },
-        sheetPeekHeight = 200.dp
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            GoogleMap(
+            },
+            sheetPeekHeight = 200.dp
+        ) { paddingValues ->
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTapGestures { _ ->
-                            coroutineScope.launch {
-                                if (bottomSheetScaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
-                                    bottomSheetScaffoldState.bottomSheetState.partialExpand()
+                    .padding(paddingValues)
+            ) {
+                GoogleMap(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures { _ ->
+                                coroutineScope.launch {
+                                    if (bottomSheetScaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
+                                        bottomSheetScaffoldState.bottomSheetState.partialExpand()
+                                    }
                                 }
                             }
+                        },
+                    cameraPositionState = cameraPositionState
+                ) {
+                    visibleRestaurants.forEach { restaurant ->
+                        Marker(
+                            state = MarkerState(position = restaurant.location),
+                            title = restaurant.name,
+                            snippet = "Rating: ${restaurant.rating}"
+                        )
+                    }
+                }
+
+                // Display search results
+                if (searchResults.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .background(Color.White)
+                    ) {
+                        items(searchResults) { prediction ->
+                            Text(
+                                text = prediction.getFullText(null).toString(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .clickable {
+                                        coroutineScope.launch {
+                                            val place = getPlaceDetails(context, prediction.placeId)
+                                            place?.let { 
+                                                val latLng = LatLng(it.latLng.latitude, it.latLng.longitude)
+                                                cameraPositionState.animate(
+                                                    update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                                                    durationMs = 1000
+                                                )
+                                                // Add the new restaurant to the list
+//                                                val newRestaurant = Restaurant(
+//                                                    it.id,
+//                                                    it.name,
+//                                                    it.address ?: "",
+//                                                    latLng,
+//                                                    it.rating?.toFloat() ?: 0f
+//                                                )
+//                                                visibleRestaurants = visibleRestaurants + newRestaurant
+                                            }
+                                            searchQuery = TextFieldValue()
+                                            searchResults = emptyList()
+                                        }
+                                    }
+                            )
                         }
-                    },
-                cameraPositionState = cameraPositionState
-            ) {
-                visibleRestaurants.forEach { restaurant ->
-                    Marker(
-                        state = MarkerState(position = restaurant.location),
-                        title = restaurant.name,
-                        snippet = "Rating: ${restaurant.rating}"
-                    )
+                    }
                 }
             }
         }
@@ -300,6 +369,47 @@ fun UserCard(user: User) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
+        }
+    }
+}
+
+suspend fun searchPlaces(context: Context, query: String): List<AutocompletePrediction> {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setQuery(query)
+            .setTypeFilter(TypeFilter.ESTABLISHMENT)
+            .build()
+
+        try {
+            val response = placesClient.findAutocompletePredictions(request).await()
+            response.autocompletePredictions.filter { prediction ->
+                prediction.placeTypes.contains(Place.Type.RESTAURANT)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+}
+
+suspend fun getPlaceDetails(context: Context, placeId: String): Place? {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val request = FetchPlaceRequest.newInstance(placeId, listOf(
+            Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.LAT_LNG,
+            Place.Field.ADDRESS,
+            Place.Field.RATING
+        ))
+
+        try {
+            val response = placesClient.fetchPlace(request).await()
+            response.place
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 }
