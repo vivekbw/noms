@@ -3,6 +3,7 @@ package com.example.noms.ui.restaurants
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -11,13 +12,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -28,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,10 +47,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -118,7 +126,7 @@ fun RestaurantsScreen() {
         withContext(Dispatchers.IO) {
             // Replace with actual data fetching from Supabase or any other source
             val mockData = listOf(
-                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 4.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
+                Restaurant(1, "Lazeez Shawarma", "Best shawarma in town", "123 Main St", 3.5f, "ChIJ8dUjLgH0K4gREB0QrExd6W4"),
                 Restaurant(2, "Shinwa", "Authentic Japanese cuisine", "456 Elm St", 4.0f, "ChIJg8Gc9iP1K4gREgG-kyXe6tk"),
                 Restaurant(3, "Williams Fresh Cafe", "Cozy coffee shop", "789 Oak St", 4.2f, "ChIJf93czgb0K4gR2anL3Rkcy3c"),
                 Restaurant(4, "Campus Pizza", "Delicious pizzas", "321 Maple St", 4.8f, "ChIJP_Ie6gb0K4gRO7D5w_qpCyE"),
@@ -186,59 +194,98 @@ fun RestaurantsScreen() {
 @Composable
 fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit) {
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var showDialog by remember { mutableStateOf(false) }
+    var userRating by remember { mutableStateOf(restaurant.rating) } // User's selected rating
     var showReviews by remember { mutableStateOf(false) } // State for showing reviews
-    val coroutineScope = rememberCoroutineScope()
-
-    // Mock reviews data (to be replaced with actual data)
-    val reviews = listOf(
+    var showAddReviewDialog by remember { mutableStateOf(false) } // State for showing add review dialog
+    val reviews = remember { mutableStateListOf(
         Review("Ahmed Ahmed", 4.5f, "What a great Spot Would recommend to everyone"),
         Review("John Doe", 4.0f, "Tasty food, friendly service."),
         Review("Jane Smith", 5.0f, "Excellent place! Best in town."),
-        Review("Emily Davis", 3.5f, "Good food, but slow service."),
-    )
+        Review("Emily Davis", 3.5f, "Good food, but slow service.")
+    ) }
+    val coroutineScope = rememberCoroutineScope()
 
-    // Card layout without showing image initially
+    // Launch coroutine to fetch the image as soon as the card is composed
+    LaunchedEffect(restaurant.placeId) {
+        coroutineScope.launch {
+            val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
+            if (photoMetadata != null) {
+                photoBitmap = fetchPhoto(context, photoMetadata)
+            }
+        }
+    }
+
+    // Card layout with image on the right-hand side
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp)
             .height(190.dp)
-            .clickable {
-                // Launch a coroutine to fetch the image
-                coroutineScope.launch {
-                    val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
-                    if (photoMetadata != null) {
-                        photoBitmap = fetchPhoto(context, photoMetadata)
-                    }
-                }
-                onClick()
-                showDialog = true // Show image dialog on click
-            },
+            .clickable(onClick = onClick), // Only handles onClick for reviews, no longer for image
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp)
         ) {
-            Text(text = restaurant.name, style = MaterialTheme.typography.titleMedium, color = Color.Black,  modifier = Modifier.padding(bottom = 8.dp))
-            Text(text = restaurant.description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray,  modifier = Modifier.padding(bottom = 8.dp))
-            Text(text = "Location: ${restaurant.location}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray,  modifier = Modifier.padding(bottom = 8.dp))
-            RatingBar(rating = restaurant.rating) // Display rating
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = { showReviews = true }) { // Button to show reviews
-                Text("Show Reviews")
-            }
-        }
-    }
+            // Text content on the left-hand side
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = restaurant.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = restaurant.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Location: ${restaurant.location}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.DarkGray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
 
-    // Show image dialog if showDialog is true and the photoBitmap is available
-    if (showDialog && photoBitmap != null) {
-        ImageDialog(photoBitmap!!) {
-            showDialog = false // Hide the dialog when dismissed
+                RatingBar(rating = userRating) { newRating ->
+                    userRating = newRating
+                    // You can also update restaurant.rating or trigger other side effects
+                }
+
+                // Button to show reviews
+                Row {
+                    TextButton(onClick = { showReviews = true }) {
+                        Text("Show Reviews")
+                    }
+
+                    TextButton(onClick = { showAddReviewDialog = true }) {
+                        Text("Add Review")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Display the image on the right-hand side if available
+            photoBitmap?.let { bitmap ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Restaurant Image",
+                    modifier = Modifier
+                        .size(110.dp) // Set the size of the image
+                        .clip(RoundedCornerShape(8.dp)) // Optionally round the corners
+                        .background(Color.LightGray) // Placeholder background
+                )
+            }
         }
     }
 
@@ -248,7 +295,19 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
             showReviews = false // Hide reviews dialog when dismissed
         }
     }
+
+    // Show add review dialog if showAddReviewDialog is true
+    if (showAddReviewDialog) {
+        AddReviewDialog(
+            onSubmit = { name, rating, comment ->
+                reviews.add(Review(name, rating, comment)) // Add the new review to the list
+                showAddReviewDialog = false
+            },
+            onDismiss = { showAddReviewDialog = false }
+        )
+    }
 }
+
 
 @Composable
 fun ReviewsDialog(reviews: List<Review>, onDismiss: () -> Unit) {
@@ -282,14 +341,113 @@ fun ReviewCard(review: Review) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(text = review.name, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
-            RatingBar(rating = review.rating) // Show rating as stars
-            Text(text = review.comment, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            // Reviewer's name
+            Text(
+                text = review.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black
+            )
+
+            // Rating bar displaying the static rating
+            RatingBar1(rating = review.rating)
+
+            // Review comment
+            Text(
+                text = review.comment,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
         }
     }
 }
 
+
+@Composable
+fun RatingBar1(
+    rating: Float // Current rating value
+) {
+    Row {
+        repeat(5) { index ->
+            Icon(
+                imageVector = if (index < rating.toInt()) Icons.Filled.Star else Icons.Outlined.Star,
+                contentDescription = "Star",
+                tint = Color(0xFF2E8B57), // Custom star color
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+
+
+
+
+
 data class Review(val name: String, val rating: Float, val comment: String)
+
+@Composable
+fun AddReviewDialog(onSubmit: (String, Float, String) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var rating by remember { mutableStateOf(0f) } // Keep track of rating as Float
+    var comment by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Add Review", style = MaterialTheme.typography.titleMedium)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Input for reviewer's name
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Rating bar to select the rating
+                RatingBar(rating = rating, onRatingChanged = { newRating ->
+                    rating = newRating
+                })
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Input for review comment
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text("Comment") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank() && rating in 0f..5f && comment.isNotBlank()) {
+                        onSubmit(name, rating, comment) // Submit the review with correct rating
+                    }
+                }
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+
+
 
 
 @Composable
@@ -315,19 +473,31 @@ fun ImageDialog(photoBitmap: Bitmap, onDismiss: () -> Unit) {
 
 
 @Composable
-fun RatingBar(rating: Float) {
-    // Simplified rating bar: display stars based on the rating
+fun RatingBar(
+    rating: Float, // Current rating value
+    onRatingChanged: (Float) -> Unit // Callback for when the rating changes
+) {
+    var selectedRating by remember { mutableStateOf(rating) } // Keep track of the selected rating
+
     Row {
         repeat(5) { index ->
             Icon(
-                imageVector = if (index < rating.toInt()) Icons.Filled.Star else Icons.Outlined.Star,
+                imageVector = if (index < selectedRating.toInt()) Icons.Filled.Star else Icons.Outlined.Star,
                 contentDescription = "Star",
                 tint = Color(0xFF2E8B57),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        // Update the rating when a star is clicked
+                        selectedRating = (index + 1).toFloat()
+                        onRatingChanged(selectedRating)
+                    }
             )
         }
     }
 }
+
+
 
 
 @Serializable
