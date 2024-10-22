@@ -53,21 +53,18 @@ import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import com.example.noms.*
+import com.example.noms.backend.Restaurant
+import com.example.noms.backend.User
+import com.example.noms.backend.getAllRestaurants
+import com.example.noms.backend.getAllUsers
 
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
