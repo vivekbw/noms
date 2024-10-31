@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit
 
 class AuthComposeActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
-    private val bypassAuth = true // TODO: SET THIS TO TRUE, TO SKIP AUTH FOR TESTING
+    private val bypassAuth = false // TODO: SET THIS TO TRUE, TO SKIP AUTH FOR TESTING
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +62,14 @@ class AuthComposeActivity : ComponentActivity() {
 @Composable
 fun AuthScreen(auth: FirebaseAuth, bypassAuth: Boolean) {
     var currentScreen by remember { mutableStateOf(AuthScreen.INITIAL) }
+    val context = LocalContext.current
+
+    LaunchedEffect(auth.currentUser, bypassAuth) {
+        if (auth.currentUser != null || bypassAuth) {
+            context.startActivity(Intent(context, MainActivity::class.java))
+            (context as? ComponentActivity)?.finish()
+        }
+    }
 
     when (currentScreen) {
         AuthScreen.INITIAL -> InitialScreen(
