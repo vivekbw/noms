@@ -224,7 +224,6 @@ fun RestaurantsScreen(innerPadding: PaddingValues) {
                                                     update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
                                                     durationMs = 1000
                                                 )
-                                                // Add the new restaurant to the list
 //                                                val newRestaurant = Restaurant(
 //                                                    it.id,
 //                                                    it.name,
