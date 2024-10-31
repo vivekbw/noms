@@ -423,6 +423,10 @@ private fun sendVerificationCode(
         ) {
             callback(verificationId)
         }
+
+        override fun onVerificationCompleted(p0: PhoneAuthCredential) {
+            TODO("Not yet implemented")
+        }
     }
 
     val options = PhoneAuthOptions.newBuilder(auth)
