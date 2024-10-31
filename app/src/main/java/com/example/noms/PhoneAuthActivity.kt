@@ -1,5 +1,6 @@
 package com.example.noms
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -108,7 +109,12 @@ fun PhoneAuthScreen(auth: FirebaseAuth) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
-                    verifyCode(verificationCode, storedVerificationId, auth, context)
+                    verifyCode(verificationCode, storedVerificationId, auth, context) { success ->
+                        if (success) {
+                            context.startActivity(Intent(context, MainActivity::class.java))
+                            (context as? ComponentActivity)?.finish()
+                        }
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = seaGreen)
@@ -129,7 +135,11 @@ private fun sendVerificationCode(
 ) {
     val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-            signInWithPhoneAuthCredential(credential, auth, context)
+            signInWithPhoneAuthCredential(credential, auth, context) { verificationId, token ->
+                var storedVerificationId = verificationId
+                var resendToken = token
+                var isCodeSent = true
+            }
         }
 
         override fun onVerificationFailed(e: FirebaseException) {
@@ -150,25 +160,42 @@ private fun sendVerificationCode(
     PhoneAuthProvider.verifyPhoneNumber(options)
 }
 
-private fun verifyCode(code: String, storedVerificationId: String?, auth: FirebaseAuth, context: android.content.Context) {
+private fun verifyCode(
+    code: String,
+    storedVerificationId: String?,
+    auth: FirebaseAuth,
+    context: android.content.Context,
+    onVerificationComplete: (Boolean) -> Unit
+) {
     if (storedVerificationId != null) {
         val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
-        signInWithPhoneAuthCredential(credential, auth, context)
+        signInWithPhoneAuthCredential(credential, auth, context) { success, _ ->
+            onVerificationComplete(success)
+        }
     } else {
         Toast.makeText(context, "Error: No verification ID", Toast.LENGTH_SHORT).show()
+        onVerificationComplete(false)
     }
 }
 
-private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential, auth: FirebaseAuth, context: android.content.Context) {
+
+private fun signInWithPhoneAuthCredential(
+    credential: PhoneAuthCredential,
+    auth: FirebaseAuth,
+    context: Context,
+    onComplete: (Boolean, Any?) -> Unit
+) {
     auth.signInWithCredential(credential)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 context.startActivity(Intent(context, MainActivity::class.java))
                 (context as? ComponentActivity)?.finish()
+                onComplete(true, null)
             } else {
                 if (task.exception is FirebaseAuthInvalidCredentialsException) {
                     Toast.makeText(context, "Invalid code.", Toast.LENGTH_SHORT).show()
                 }
+                onComplete(false, null)
             }
         }
 }

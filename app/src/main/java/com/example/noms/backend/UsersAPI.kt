@@ -30,12 +30,11 @@ suspend fun getAllUsers(): List<User>{
     return result
 }
 
-suspend fun createUser(name: String, firstName: String, lastName: String, phoneNumber: String): Int{
-    if (!confirmUser(phoneNumber)){
+suspend fun createUser(firstName: String, lastName: String, phoneNumber: String): Int{
+    if (confirmUser(phoneNumber)) {
         return -1
     }
     val newUser = User(
-        uid = 13,
         first_name = firstName,
         last_name = lastName,
         phone_number = phoneNumber
