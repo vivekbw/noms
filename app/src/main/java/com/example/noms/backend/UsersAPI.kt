@@ -5,13 +5,14 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.filter.TextSearchType
 import kotlin.reflect.jvm.internal.impl.types.TypeCheckerState.SupertypesPolicy.None
 
-suspend fun getUser(uid: Int): User {
+suspend fun getUser(uid: Int): User? {
     val result = supabase.from("users").select(){
         filter {
             eq("uid", uid)
         }
-    }.decodeSingle<User>()
-    return result
+    }.decodeList<User>()  // Decode as a list instead of a single item
+
+    return result.firstOrNull()
 }
 
 suspend fun confirmUser(phoneNumber: String): Boolean{
