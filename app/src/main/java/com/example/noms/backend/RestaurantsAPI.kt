@@ -2,6 +2,15 @@ package com.example.noms.backend
 
 import io.github.jan.supabase.postgrest.from
 
+suspend fun getRestarurant(rid: Int): Restaurant{
+    val result = supabase.from("restaurants").select(){
+        filter {
+            eq("rid", rid)
+        }
+    }.decodeSingle<Restaurant>()
+    return result
+}
+
 suspend fun getAllRestaurants(): List<Restaurant>{
     val restaurants = supabase.from("restaurants").select().decodeList<Restaurant>()
     return restaurants

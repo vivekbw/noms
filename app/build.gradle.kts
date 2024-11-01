@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.noms"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -71,6 +71,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.5.3")
+    implementation("androidx.compose.foundation:foundation:1.5.0")
 
     
     testImplementation(libs.junit)
@@ -96,6 +97,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.1.0")
     implementation(platform("io.github.jan-tennert.supabase:bom:2.0.0"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt")
     implementation("io.github.jan-tennert.supabase:gotrue-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
     implementation("io.ktor:ktor-client-android:2.3.5")

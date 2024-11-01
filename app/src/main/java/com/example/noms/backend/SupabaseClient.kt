@@ -6,6 +6,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.postgrest.from
 import kotlinx.serialization.Serializable
 import java.time.format.DateTimeFormatter
@@ -16,6 +17,7 @@ val supabase = createSupabaseClient(
     supabaseKey = remoteConfig.getString("supabase_key")
 ) {
     install(Postgrest)
+    install(Storage)
 }
 
 @Serializable
@@ -38,7 +40,7 @@ data class Restaurant(
     val rid: Int? = null,
     val name: String,
     val location: String,        // will need to change
-    val rating: Float,
+    var rating: Float,
     val placeId: String,
     val description: String
 )
@@ -50,7 +52,7 @@ data class Review(
     val uid: Int,
     val rid: Int,
     val text: String,
-    val rating: Int
+    val rating: Float
 )
 
 @Serializable

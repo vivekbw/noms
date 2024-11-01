@@ -1,10 +1,11 @@
 package com.example.noms.backend
+import android.os.Build
+import androidx.annotation.RequiresApi
 import io.github.jan.supabase.postgrest.from
+import java.time.format.DateTimeFormatter
+import java.util.Collections
 
-suspend fun getReviews(uid: Int = -1, location: Pair<Double, Double>): List<Review>{
-    if (uid == -1){
-        // handle the search for reviews part with location... IDK what to do as of yet
-    }
+suspend fun getReviewsFromUser(uid: Int = -1): List<Review>{
     val result = supabase.from("reviews").select(){
         filter{
             eq("uid", uid)
@@ -12,4 +13,29 @@ suspend fun getReviews(uid: Int = -1, location: Pair<Double, Double>): List<Revi
     }.decodeList<Review>()
 
     return result
+}
+
+suspend fun getReviewsFromRestaurant(rid: Int): List<Review>{
+    val result = supabase.from("reviews").select(){
+        filter{
+            eq("rid", rid)
+        }
+    }.decodeList<Review>()
+
+    return result
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+suspend fun writeReview(uid: Int, rid: Int, text:String, rating:Float){
+    val curDate = java.time.LocalDate.now()
+    val newReview = Review(
+        created_date = curDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+        uid = uid,
+        rid = rid,
+        text = text,
+        rating = rating
+    )
+
+    supabase.from("reviews").insert(newReview)
 }
