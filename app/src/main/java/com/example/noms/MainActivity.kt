@@ -62,9 +62,9 @@ class MainActivity : ComponentActivity() {
                                 val mapsApiKey = remoteConfig.getString("google_maps_key")
                                 if (mapsApiKey.isNotEmpty()) {
                                     Places.initialize(applicationContext, mapsApiKey)
-                                    Log.d("PlacesAPI", "Places API initialized successfully.")
+                                    Log.d("PlacesAPI", "Places API initialized successfully with Remote Config key")
                                 } else {
-                                    Log.e("PlacesAPI", "Google Maps API key is empty")
+                                    Log.e("Maps", "No API key available from Remote Config")
                                 }
 
                                 val supabaseUrl = remoteConfig.getString("supabase_url")
