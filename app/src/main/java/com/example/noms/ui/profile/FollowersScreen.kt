@@ -21,6 +21,15 @@ import com.example.noms.backend.getAllUsers
 import com.example.noms.backend.getFollowers
 import kotlinx.coroutines.launch
 
+
+@Preview(showBackground = true)
+@Composable
+fun FollowersScreenPreview() {
+    MaterialTheme {
+        FollowersScreen(currentUserId = 15)
+    }
+}
+
 @Composable
 fun FollowersScreen(currentUserId: Int) {
     val coroutineScope = rememberCoroutineScope()
@@ -60,28 +69,32 @@ fun FollowersScreen(currentUserId: Int) {
             }
         )
 
-        Spacer(modifier = Modifier.height(55.dp))
+        Spacer(modifier = Modifier.height(50.dp))
 
-        // List of all users
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 64.dp) // Add padding to prevent overlap with the navbar
+        // Enclosing LazyColumn with a grey pill-shaped background and green border
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFF2E8B57), // Green border
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp)) // Grey background
+                .padding(16.dp) // Padding inside the enclosing box
         ) {
-            val filteredUsers = users.filter { it.first_name.contains(searchQuery, ignoreCase = true) }
-            items(filteredUsers.size) { index ->
-                val user = filteredUsers[index]
-                FollowerCard(currUserId = currentUserId, follower = user)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 64.dp) // Add padding to prevent overlap with the navbar
+            ) {
+                val filteredUsers = users.filter { it.first_name.contains(searchQuery, ignoreCase = true) }
+                items(filteredUsers.size) { index ->
+                    val user = filteredUsers[index]
+                    FollowerCard(currUserId = currentUserId, follower = user)
+                }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FollowersScreenPreview() {
-    MaterialTheme {
-        FollowersScreen(currentUserId = 15)
     }
 }
 
@@ -108,7 +121,7 @@ fun FollowerCard(currUserId: Int, follower: User) {
                 color = Color(0xFF2E8B57), // Green border
                 shape = RoundedCornerShape(50) // Rounded corners for the pill shape
             )
-            .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(50)) // Light grey with pill shape
+            .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50)) // Light grey background for each card
             .padding(horizontal = 16.dp, vertical = 12.dp), // Adjust padding to make it smaller
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -132,47 +145,6 @@ fun FollowerCard(currUserId: Int, follower: User) {
     }
 }
 
-
-//
-//@Composable
-//fun FollowerCard(currUserId: Int, follower: User) {
-//    var isFollowing by remember { mutableStateOf(false) }
-//    val coroutineScope = rememberCoroutineScope()
-//
-//    // Check if the current user follows this follower
-//    LaunchedEffect(follower.uid) {
-//        follower.uid?.let { followeeId ->
-//            coroutineScope.launch {
-//                isFollowing = doesFollow(currUserId, followeeId)
-//            }
-//        }
-//    }
-//
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .background(Color.LightGray, MaterialTheme.shapes.medium)
-//            .padding(16.dp),
-//        verticalAlignment = Alignment.CenterVertically,
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-//        // User's name
-//        Text(
-//            text = "${follower.first_name} ${follower.last_name}",
-//            style = MaterialTheme.typography.bodyLarge
-//        )
-//
-//        // Follower indicator
-//        Box(
-//            modifier = Modifier
-//                .size(24.dp)
-//                .background(
-//                    color = if (isFollowing) Color.Green else Color.Red,
-//                    shape = MaterialTheme.shapes.small
-//                )
-//        )
-//    }
-//}
 
 
 @Preview(showBackground = true)
