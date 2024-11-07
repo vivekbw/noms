@@ -173,7 +173,8 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             // Following Button
             Button(
                 onClick = {
-                    navController.navigate("Following")
+                    println("need to implement")
+//                    navController.navigate("Following")
                 },
                 modifier = Modifier
                     .wrapContentWidth()
