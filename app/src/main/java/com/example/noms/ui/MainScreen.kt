@@ -39,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.noms.R
 import com.example.noms.backend.*
+import com.example.noms.ui.followers.FollowersScreen
 import com.example.noms.ui.profile.ProfileScreen
 import com.example.noms.ui.restaurants.RestaurantDetailsScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
@@ -126,6 +127,11 @@ fun MainScreen() {
             composable("Profile") {
                 ProfileScreen(navController, innerPadding)
             }
+
+            composable("Followers") {
+                FollowersScreen(currentUserId = 15) // Pass the current user ID
+            }
+
             composable(
                 "restaurantDetails/{placeId}",
                 arguments = listOf(navArgument("placeId") { type = NavType.StringType })

@@ -5,14 +5,21 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,7 +49,6 @@ import com.example.noms.backend.supabase
 import com.google.firebase.auth.FirebaseAuth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
-
 @Composable
 fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
     val context = LocalContext.current
@@ -130,6 +136,66 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Following and Followers Buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Followers Button
+            Button(
+                onClick = {
+                    navController.navigate("Followers")
+                },
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .height(36.dp) // Adjust height to make it compact
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF2E8B57),
+                        shape = RoundedCornerShape(50) // Pill shape
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent), // No fill
+                shape = RoundedCornerShape(50) // Pill shape
+            ) {
+                Text(
+                    text = "Followers",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF2E8B57),
+                    maxLines = 1 // Prevent text overflow
+                )
+            }
+
+            // Following Button
+            Button(
+                onClick = {
+                    navController.navigate("Following")
+                },
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .height(36.dp) // Adjust height to make it compact
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF2E8B57),
+                        shape = RoundedCornerShape(50) // Pill shape
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent), // No fill
+                shape = RoundedCornerShape(50) // Pill shape
+            ) {
+                Text(
+                    text = "Following",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF2E8B57),
+                    maxLines = 1 // Prevent text overflow
+                )
+            }
+        }
+
+
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
@@ -157,6 +223,5 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
                     .padding(vertical = 4.dp)
             )
         }
-
     }
 }
