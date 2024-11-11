@@ -188,7 +188,7 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         // Add Playlist LazyColumn
         Text(

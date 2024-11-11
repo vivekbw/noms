@@ -205,7 +205,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp) // Restrict height for compact display
+                .height(210.dp) // Restrict height for compact display
                 .border(
                     width = 2.dp,
                     color = Color(0xFF2E8B57), // Green border
@@ -246,7 +246,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
     }
 }
 
-
+//non grouped playlists
 //@Composable
 //fun RestaurantPlaylistScreenWithCards(uid: Int) {
 //    val context = LocalContext.current // Get the context
