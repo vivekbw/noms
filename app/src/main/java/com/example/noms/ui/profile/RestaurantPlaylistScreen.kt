@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.noms.backend.Playlist
 import com.example.noms.backend.Restaurant
+import com.example.noms.backend.getUser
 import com.example.noms.ui.restaurants.fetchPhoto
 import com.example.noms.ui.restaurants.fetchPhotoReference
 
@@ -160,18 +161,22 @@ fun RestaurantPlaylistCard(context: Context, restaurant: Restaurant) {
 
 
 
-
 @Composable
 fun RestaurantPlaylistScreenWithCards(uid: Int) {
     val context = LocalContext.current // Get the context
     val tag = "RestaurantPlaylist"
     val playlists = remember { mutableStateListOf<Playlist>() }
     val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
+    var userName by remember { mutableStateOf<String?>(null) } // State for user's name
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uid) {
         coroutineScope.launch {
             try {
+                // Fetch user's name
+                val user = getUser(uid) // Use the existing getUser function
+                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
+
                 // Fetch playlists for the user
                 val fetchedPlaylists = getPlaylistsofUser(uid)
                 playlists.clear()
@@ -196,7 +201,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             BasicText(
-                text = "No playlists found for user $uid.",
+                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
                 style = TextStyle(fontSize = 18.sp, color = Color.Gray)
             )
         }
@@ -205,7 +210,6 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(210.dp) // Restrict height for compact display
                 .border(
                     width = 2.dp,
                     color = Color(0xFF2E8B57), // Green border
@@ -245,6 +249,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
         }
     }
 }
+
 
 //non grouped playlists
 //@Composable

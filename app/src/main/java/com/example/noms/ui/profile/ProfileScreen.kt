@@ -207,7 +207,7 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             RestaurantPlaylistScreenWithCards(uid = 15) // Replace with dynamic user ID if needed
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {

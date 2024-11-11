@@ -131,8 +131,20 @@ fun MainScreen() {
                 ProfileScreen(navController, innerPadding)
             }
 
+//            composable("Followers") {
+//                FollowersScreen(currentUserId = 15) // Pass the current user ID
+//            }
+
             composable("Followers") {
-                FollowersScreen(currentUserId = 15) // Pass the current user ID
+                FollowersScreen(navController = navController, currentUserId = 15) // Pass the current user ID
+            }
+
+            composable(
+                "Playlist/{userId}",
+                arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+                RestaurantPlaylistScreenWithCards(uid = userId) // Pass the user ID to the playlist screen
             }
 
             composable("RestaurantPlaylists") {
