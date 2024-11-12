@@ -15,13 +15,19 @@ suspend fun getReviewsFromUser(uid: Int = -1): List<Review>{
     return result
 }
 
+suspend fun getFollowerReviews(uid:Int): List<Review>{
+    val followers = getFollowers(uid)
+    val follower_ids:List<Int> = followers.mapNotNull { it.uid }
+    val reviews: List<Review> = follower_ids.flatMap { getReviewsFromUser(it) }
+    return reviews
+}
+
 suspend fun getReviewsFromRestaurant(rid: Int): List<Review>{
     val result = supabase.from("reviews").select(){
         filter{
             eq("rid", rid)
         }
     }.decodeList<Review>()
-
     return result
 }
 

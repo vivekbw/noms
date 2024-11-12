@@ -41,3 +41,27 @@ suspend fun getPlaylist(pid: Int): List<Restaurant> {
     }.decodeList<Restaurant>()
     return restaurants
 }
+
+suspend fun createPlaylist(name:String, uid:Int){
+    val newPlaylist = Playlist(
+        uid = uid,
+        text = name
+    )
+    supabase.from("playlists").insert(newPlaylist)
+}
+
+suspend fun addRestaurantToPlaylist(rid:Int, pid:Int){
+    val addRestaurant = PlaylistRestaurantid(
+        pid = pid,
+        rid = rid
+    )
+    supabase.from("playlist_restaurants").insert(addRestaurant)
+}
+
+suspend fun followPlaylist(uid: Int, pid:Int){
+    val follow = FollowPlaylist(
+        uid = uid,
+        pid = pid
+    )
+    supabase.from("follow_playlist").insert(follow)
+}

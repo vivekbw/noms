@@ -72,3 +72,13 @@ suspend fun getFollowerCount(uid: Int): Int {
     }.decodeList<Follow>()
     return followercount.size
 }
+
+// remove Cuid from following uid
+suspend fun unfollowUser(Cuid:Int, uid:Int){
+    supabase.from("followers").delete{
+        filter{
+            eq("follower_id", Cuid)
+            eq("followee_id", uid)
+        }
+    }
+}

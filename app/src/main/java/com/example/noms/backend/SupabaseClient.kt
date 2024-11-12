@@ -65,6 +65,12 @@ data class Playlist(
 // For backend only, don't use this
 @Serializable
 data class PlaylistRestaurantid(
-    val id: Int? = null,
+    val pid: Int,
     val rid: Int,
+)
+
+@Serializable
+data class FollowPlaylist(
+    val uid: Int,
+    val pid: Int
 )
