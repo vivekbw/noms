@@ -73,12 +73,11 @@ suspend fun getFollowerCount(uid: Int): Int {
     return followercount.size
 }
 
-// remove Cuid from following uid
-suspend fun unfollowUser(Cuid:Int, uid:Int){
+suspend fun unfollowUser(follower_uid:Int, following_uid:Int){
     supabase.from("followers").delete{
         filter{
-            eq("follower_id", Cuid)
-            eq("followee_id", uid)
+            eq("follower_id", follower_uid)
+            eq("followee_id", following_uid)
         }
     }
 }

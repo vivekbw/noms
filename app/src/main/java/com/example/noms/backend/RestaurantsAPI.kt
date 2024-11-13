@@ -2,6 +2,27 @@ package com.example.noms.backend
 
 import io.github.jan.supabase.postgrest.from
 
+// Convert latitude and longitude to a comma-separated string
+fun latLngToString(latitude: Double, longitude: Double): String {
+    return "$latitude,$longitude"
+}
+
+// Convert the comma-separated string back to latitude and longitude
+fun stringToLatLng(location: String): Pair<Double, Double>? {
+    val parts = location.split(",")
+    return if (parts.size == 2) {
+        val latitude = parts[0].toDoubleOrNull()
+        val longitude = parts[1].toDoubleOrNull()
+        if (latitude != null && longitude != null) {
+            Pair(latitude, longitude)
+        } else {
+            null  // Return null if the conversion fails
+        }
+    } else {
+        null  // Return null if format is incorrect
+    }
+}
+
 suspend fun getRestarurant(rid: Int): Restaurant{
     val result = supabase.from("restaurants").select(){
         filter {
@@ -14,54 +35,4 @@ suspend fun getRestarurant(rid: Int): Restaurant{
 suspend fun getAllRestaurants(): List<Restaurant>{
     val restaurants = supabase.from("restaurants").select().decodeList<Restaurant>()
     return restaurants
-}
-
-// gets list of playlists of a user, not the restaurants
-suspend fun getPlaylistsofUser(uid: Int): List<Playlist>{
-    val result = supabase.from("playlists").select(){
-        filter {
-            eq("uid", uid)
-        }
-    }.decodeList<Playlist>()
-    return result
-}
-
-// input playlist id, get all restaurants in that playlist
-suspend fun getPlaylist(pid: Int): List<Restaurant> {
-    val temp = supabase.from("playlist_restaurants").select() {
-        filter{
-            eq("pid", pid)
-        }
-    }.decodeList<PlaylistRestaurantid>()
-    val restaurantIds: List<Int> = temp.map { it.rid }
-    val restaurants = supabase.from("restaurants").select(){
-        filter{
-            isIn("id", restaurantIds)
-        }
-    }.decodeList<Restaurant>()
-    return restaurants
-}
-
-suspend fun createPlaylist(name:String, uid:Int){
-    val newPlaylist = Playlist(
-        uid = uid,
-        text = name
-    )
-    supabase.from("playlists").insert(newPlaylist)
-}
-
-suspend fun addRestaurantToPlaylist(rid:Int, pid:Int){
-    val addRestaurant = PlaylistRestaurantid(
-        pid = pid,
-        rid = rid
-    )
-    supabase.from("playlist_restaurants").insert(addRestaurant)
-}
-
-suspend fun followPlaylist(uid: Int, pid:Int){
-    val follow = FollowPlaylist(
-        uid = uid,
-        pid = pid
-    )
-    supabase.from("follow_playlist").insert(follow)
 }
