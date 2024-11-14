@@ -73,6 +73,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavController
 import com.example.noms.backend.*
 import io.github.jan.supabase.exceptions.HttpRequestException
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.TypeFilter
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 
 
 @Composable
@@ -143,52 +153,145 @@ suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? 
 fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues) {
     val restaurants = remember { mutableStateListOf<Restaurant>() }
     val context = LocalContext.current
-
-    // Simulate data fetching
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            // Karthik: Replaced with real data
-            val realData = getAllRestaurants()
-            restaurants.addAll(realData)
-        }
-    }
-
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    
+    var searchQuery by remember { mutableStateOf(TextFieldValue()) }
+    var searchResults by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    
     val waterloo = LatLng(43.4643, -80.5204)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(waterloo, 10f)
     }
 
-    BottomSheetScaffold(
-        scaffoldState = rememberBottomSheetScaffoldState(),
-        sheetContent = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 100.dp)
-            ) {
-                items(restaurants) { restaurant ->
-                    RestaurantCard(context, restaurant) {
-                        // Navigate to the combined screen on click
-                        navController.navigate("restaurantDetails/${restaurant.placeId}")
+    LaunchedEffect(Unit) {
+        try {
+            val fetchedRestaurants = getAllRestaurants()
+            restaurants.clear()
+            restaurants.addAll(fetchedRestaurants)
+        } catch (e: Exception) {
+            Log.e("RestaurantsScreen", "Error fetching restaurants: ${e.message}")
+        }
+    }
+
+    fun parseLocationString(locationStr: String): LatLng? {
+        return try {
+            val (lat, lng) = locationStr.split(",").map { it.trim().toDouble() }
+            LatLng(lat, lng)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { newValue ->
+                    searchQuery = newValue
+                    coroutineScope.launch {
+                        searchResults = searchPlaces(context, newValue.text)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Search for restaurants") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+            )
+
+            BottomSheetScaffold(
+                scaffoldState = scaffoldState,
+                sheetContent = {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(bottom = 100.dp)
+                    ) {
+                        items(restaurants) { restaurant ->
+                            RestaurantCard(
+                                context = context,
+                                restaurant = restaurant,
+                                onAddReviewClick = {
+                                    navController.navigate("restaurantDetails/${restaurant.placeId}")
+                                },
+                                onCardClick = {
+                                    parseLocationString(restaurant.location)?.let { latLng ->
+                                        coroutineScope.launch {
+                                            cameraPositionState.animate(
+                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                                                durationMs = 1000
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                },
+                sheetPeekHeight = 200.dp
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState
+                    ) {
+                        restaurants.forEach { restaurant ->
+                            parseLocationString(restaurant.location)?.let { latLng ->
+                                Marker(
+                                    state = MarkerState(position = latLng),
+                                    title = restaurant.name,
+                                    snippet = "Rating: ${restaurant.rating}",
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            cameraPositionState.animate(
+                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                                                durationMs = 1000
+                                            )
+                                        }
+                                        true
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
-        },
-        sheetPeekHeight = 200.dp
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+        }
+
+        if (searchResults.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 80.dp)
+                    .background(Color.White)
             ) {
-                Marker(
-                    state = MarkerState(position = waterloo),
-                    title = "Waterloo",
-                    snippet = "Marker in Waterloo"
-                )
+                items(searchResults) { prediction ->
+                    Text(
+                        text = prediction.getFullText(null).toString(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                coroutineScope.launch {
+                                    val place = getPlaceDetails(context, prediction.placeId)
+                                    place?.let { 
+                                        val latLng = LatLng(it.latLng.latitude, it.latLng.longitude)
+                                        cameraPositionState.animate(
+                                            update = CameraUpdateFactory.newLatLngZoom(latLng, 18f),
+                                            durationMs = 1000
+                                        )
+                                    }
+                                    searchQuery = TextFieldValue()
+                                    searchResults = emptyList()
+                                }
+                            }
+                    )
+                }
             }
         }
     }
@@ -197,11 +300,15 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
 
 
 @Composable
-fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit) {
+fun RestaurantCard(
+    context: Context,
+    restaurant: Restaurant,
+    onAddReviewClick: () -> Unit,
+    onCardClick: () -> Unit
+) {
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Launch coroutine to fetch the image when the card is loaded
     LaunchedEffect(restaurant.placeId) {
         val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
         if (photoMetadata != null) {
@@ -213,72 +320,83 @@ fun RestaurantCard(context: Context, restaurant: Restaurant, onClick: () -> Unit
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp)
-            .height(150.dp)
-            .clickable { onClick() },
+            .clickable { onCardClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Column for text on the left
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = restaurant.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = restaurant.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Text(
-                    text = "Location: ${restaurant.location}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.DarkGray,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                StarRatingBar(
-                    maxStars = 5,
-                    rating = restaurant.rating,
-                    // you should not change restauarant rating here, it should be a api call to update restaurant
-                    onRatingChanged = { newRating ->
-                        restaurant.rating = newRating
-                        println("New rating: $newRating")
+                Column(
+                    modifier = Modifier
+                        .weight(1f),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = restaurant.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = restaurant.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "Location: ${restaurant.location}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    StarRatingBar(
+                        maxStars = 5,
+                        rating = restaurant.rating,
+                        onRatingChanged = { newRating ->
+                            println("New rating: $newRating")
+                        }
+                    )
+                }
+
+                if (photoBitmap != null) {
+                    Image(
+                        bitmap = photoBitmap!!.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(125.dp)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    // Placeholder for the image
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(8.dp)
+                            .background(Color.LightGray, RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Loading...", style = MaterialTheme.typography.bodySmall)
                     }
-                )
+                }
             }
 
-            // Image on the right side
-            if (photoBitmap != null) {
-                Image(
-                    bitmap = photoBitmap!!.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(125.dp)
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-            } else {
-                // Placeholder for the image
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(8.dp)
-                        .background(Color.LightGray, RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Loading...", style = MaterialTheme.typography.bodySmall)
-                }
+            Button(
+                onClick = onAddReviewClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+            ) {
+                Text(text = "Add a Review", color = Color.White)
             }
         }
     }
@@ -290,7 +408,7 @@ fun ReviewsList(reviews: List<Review>) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)  // Limit height to avoid infinite constraints
+            .height(300.dp)
             .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -345,68 +463,50 @@ fun ReviewCard(review: Review) {
             StarRatingBar(
                 maxStars = 5,
                 rating = review.rating,
-                onRatingChanged = {}  // No-op since this is read-only
+                onRatingChanged = {}
             )
         }
     }
 }
 
 
-//SHOULD THIS BE DELETED _ IDK WHO WROTE THIS _ IDT IT AFFECTS ANYTHING
-@Composable
-fun UserCard(user: User) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "${user.first_name} ${user.last_name}",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF2E8B57)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = user.phone_number,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
+suspend fun searchPlaces(context: Context, query: String): List<AutocompletePrediction> {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setQuery(query)
+            .setTypeFilter(TypeFilter.ESTABLISHMENT)
+            .build()
+
+        try {
+            val response = placesClient.findAutocompletePredictions(request).await()
+            response.autocompletePredictions.filter { prediction ->
+                prediction.placeTypes.contains(Place.Type.RESTAURANT)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 }
 
+suspend fun getPlaceDetails(context: Context, placeId: String): Place? {
+    return withContext(Dispatchers.IO) {
+        val placesClient = Places.createClient(context)
+        val request = FetchPlaceRequest.newInstance(placeId, listOf(
+            Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.LAT_LNG,
+            Place.Field.ADDRESS,
+            Place.Field.RATING
+        ))
 
-
-@Composable
-fun UserList() {
-    val users = remember { mutableStateListOf<User>() }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            val results = getAllUsers()
-            users.addAll(results)
-        }
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 16.dp,
-            bottom = 100.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(users) { user ->
-            UserCard(user)
+        try {
+            val response = placesClient.fetchPlace(request).await()
+            response.place
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 }
