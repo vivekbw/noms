@@ -59,12 +59,12 @@ data class Review(
 data class Playlist(
     val id: Int? = null,
     val uid: Int,
-    val text: String,
+    val name: String,
 )
 
 // For backend only, don't use this
 @Serializable
 data class PlaylistRestaurantid(
-    val id: Int? = null,
+    val pid: Int? = null,
     val rid: Int,
 )
