@@ -23,7 +23,7 @@ fun stringToLatLng(location: String): Pair<Double, Double>? {
     }
 }
 
-suspend fun getRestarurant(rid: Int): Restaurant{
+suspend fun getRestaurant(rid: Int): Restaurant{
     val result = supabase.from("restaurants").select(){
         filter {
             eq("rid", rid)

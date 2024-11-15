@@ -62,6 +62,14 @@ data class Playlist(
     val name: String,
 )
 
+@Serializable
+data class ReviewPost(
+    val reviewerName: String,
+    val restaurantName: String,
+    val rating: Float,
+    val comment: String
+)
+
 // For backend only, don't use this
 @Serializable
 data class PlaylistRestaurantid(

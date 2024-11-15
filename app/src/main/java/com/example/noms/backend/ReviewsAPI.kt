@@ -11,7 +11,6 @@ suspend fun getReviewsFromUser(uid: Int = -1): List<Review>{
             eq("uid", uid)
         }
     }.decodeList<Review>()
-
     return result
 }
 
@@ -44,4 +43,39 @@ suspend fun writeReview(uid: Int, rid: Int, text:String, rating:Float){
     )
 
     supabase.from("reviews").insert(newReview)
+}
+
+suspend fun reviewsToPost(reviews: List<Review>): List<ReviewPost>{
+    return reviews.mapNotNull { review ->
+        val user = getUser(review.uid)
+        val restaurant = getRestaurant(review.rid)
+
+        if (user != null && restaurant != null) {
+            ReviewPost(
+                reviewerName = "${user.first_name} ${user.last_name}",
+                restaurantName = restaurant.name,
+                rating = review.rating,
+                comment = review.text
+            )
+        } else {
+            null
+        }
+    }
+}
+
+// temp before recommendation engine
+suspend fun recommendRestaurants(): List<ReviewPost> {
+    val allRestaurants = getAllRestaurants()
+    val firstReviews = allRestaurants.mapNotNull { restaurant ->
+        val reviews = getReviewsFromRestaurant(restaurant.rid ?: return@mapNotNull null)
+        reviews.firstOrNull() // Take the first review if available
+    }
+
+    // Use reviewToPost to convert the list of first reviews to ReviewPost format
+    return reviewsToPost(firstReviews)
+}
+
+suspend fun followersRecommendedRestaurant(uid: Int): List<ReviewPost>{
+    val followerReviews = getFollowerReviews(uid)
+    return reviewsToPost(followerReviews)
 }

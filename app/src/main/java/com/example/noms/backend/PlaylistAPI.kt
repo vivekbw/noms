@@ -24,7 +24,7 @@ suspend fun getPlaylist(pid: Int): List<Restaurant> {
     val restaurantIds: List<Int> = temp.map { it.rid }
     val restaurants = supabase.from("restaurants").select(){
         filter{
-            isIn("id", restaurantIds)
+            isIn("rid", restaurantIds)
         }
     }.decodeList<Restaurant>()
     return restaurants
