@@ -39,13 +39,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.noms.R
 import com.example.noms.backend.*
+import com.example.noms.ui.followers.FollowersScreen
 import com.example.noms.ui.profile.ProfileScreen
+import com.example.noms.ui.profile.RestaurantPlaylistScreen
+import com.example.noms.ui.profile.RestaurantPlaylistScreenWithCards
 import com.example.noms.ui.restaurants.RestaurantDetailsScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
 import com.example.noms.ui.social.SocialScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
+
     val navController = rememberNavController()
     val items = listOf(
         Triple("Restaurants", R.drawable.ic_restaurant_black_24dp, "Restaurants"),
@@ -126,6 +130,27 @@ fun MainScreen() {
             composable("Profile") {
                 ProfileScreen(navController, innerPadding)
             }
+
+//            composable("Followers") {
+//                FollowersScreen(currentUserId = 15) // Pass the current user ID
+//            }
+
+            composable("Followers") {
+                FollowersScreen(navController = navController, currentUserId = 15) // Pass the current user ID
+            }
+
+            composable(
+                "Playlist/{userId}",
+                arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+                RestaurantPlaylistScreenWithCards(uid = userId) // Pass the user ID to the playlist screen
+            }
+
+            composable("RestaurantPlaylists") {
+                RestaurantPlaylistScreenWithCards(uid = 15) // Replace with dynamic user ID
+            }
+
             composable(
                 "restaurantDetails/{placeId}",
                 arguments = listOf(navArgument("placeId") { type = NavType.StringType })
