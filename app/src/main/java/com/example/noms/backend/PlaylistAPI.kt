@@ -33,7 +33,7 @@ suspend fun getPlaylist(pid: Int): List<Restaurant> {
 suspend fun createPlaylist(name:String, uid:Int){
     val newPlaylist = Playlist(
         uid = uid,
-        text = name
+        name = name
     )
     supabase.from("playlists").insert(newPlaylist)
 }
