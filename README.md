@@ -24,3 +24,4 @@
 # Releases
 - [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
 - [Release Version 2.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-2.0-Release)
+- [Release Version 3.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-3.0-Release)
