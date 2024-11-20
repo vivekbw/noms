@@ -1,6 +1,8 @@
 package com.example.noms.backend
 
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.filter.TextSearchType
 
 // Convert latitude and longitude to a comma-separated string
 fun latLngToString(latitude: Double, longitude: Double): String {
@@ -35,4 +37,26 @@ suspend fun getRestaurant(rid: Int): Restaurant{
 suspend fun getAllRestaurants(): List<Restaurant>{
     val restaurants = supabase.from("restaurants").select().decodeList<Restaurant>()
     return restaurants
+}
+
+suspend fun searchByLocation(location: String): Boolean{
+    val result = supabase.from("restaurants").select(columns = Columns.list("location")){
+        filter{
+            textSearch(column = "location", query = location, textSearchType = TextSearchType.TSVECTOR)
+        }
+    }.data
+    return result != "[]"
+}
+
+suspend fun addRestaurant(location: String, name:String, placeId:String){
+    if (!searchByLocation(location)){
+        val newRestaurant = Restaurant(
+            name = name,
+            location = location,
+            rating = 0.0f,
+            placeId = placeId,
+            description = ""
+        )
+        supabase.from("restaurants").insert(newRestaurant)
+    }
 }
