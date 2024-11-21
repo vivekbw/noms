@@ -1,8 +1,31 @@
 package com.example.noms.backend
 
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.filter.TextSearchType
 
-suspend fun getRestarurant(rid: Int): Restaurant{
+// Convert latitude and longitude to a comma-separated string
+fun latLngToString(latitude: Double, longitude: Double): String {
+    return "$latitude,$longitude"
+}
+
+// Convert the comma-separated string back to latitude and longitude
+fun stringToLatLng(location: String): Pair<Double, Double>? {
+    val parts = location.split(",")
+    return if (parts.size == 2) {
+        val latitude = parts[0].toDoubleOrNull()
+        val longitude = parts[1].toDoubleOrNull()
+        if (latitude != null && longitude != null) {
+            Pair(latitude, longitude)
+        } else {
+            null  // Return null if the conversion fails
+        }
+    } else {
+        null  // Return null if format is incorrect
+    }
+}
+
+suspend fun getRestaurant(rid: Int): Restaurant{
     val result = supabase.from("restaurants").select(){
         filter {
             eq("rid", rid)
@@ -16,28 +39,24 @@ suspend fun getAllRestaurants(): List<Restaurant>{
     return restaurants
 }
 
-// gets list of playlists of a user, not the restaurants
-suspend fun getPlaylistsofUser(uid: Int): List<Playlist>{
-    val result = supabase.from("playlists").select(){
-        filter {
-            eq("uid", uid)
+suspend fun searchByLocation(location: String): Boolean{
+    val result = supabase.from("restaurants").select(columns = Columns.list("location")){
+        filter{
+            textSearch(column = "location", query = location, textSearchType = TextSearchType.TSVECTOR)
         }
-    }.decodeList<Playlist>()
-    return result
+    }.data
+    return result != "[]"
 }
 
-// input playlist id, get all restaurants in that playlist
-suspend fun getPlaylist(pid: Int): List<Restaurant> {
-    val temp = supabase.from("playlist_restaurants").select() {
-        filter{
-            eq("pid", pid)
-        }
-    }.decodeList<PlaylistRestaurantid>()
-    val restaurantIds: List<Int> = temp.map { it.rid }
-    val restaurants = supabase.from("restaurants").select(){
-        filter{
-            isIn("rid", restaurantIds)
-        }
-    }.decodeList<Restaurant>()
-    return restaurants
+suspend fun addRestaurant(location: String, name:String, placeId:String){
+    if (!searchByLocation(location)){
+        val newRestaurant = Restaurant(
+            name = name,
+            location = location,
+            rating = 0.0f,
+            placeId = placeId,
+            description = ""
+        )
+        supabase.from("restaurants").insert(newRestaurant)
+    }
 }

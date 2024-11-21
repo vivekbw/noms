@@ -29,28 +29,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import com.example.noms.R
 import android.util.Log
-
-data class ReviewPost(
-    val id: Int,
-    val reviewerName: String,
-    val restaurantName: String,
-    val rating: Float,
-    val comment: String
-)
+import com.example.noms.backend.*
 
 @Composable
 fun SocialScreen(innerPadding: PaddingValues) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("For you", "Following")
 
-    val reviewPosts = remember {
-        listOf(
-            ReviewPost(1, "John Doe", "Tasty Bites", 4.5f, "Great food and atmosphere! Highly recommended."),
-            ReviewPost(2, "Jane Smith", "Burger Palace", 3.8f, "Decent burgers, but service was a bit slow."),
-            ReviewPost(3, "Mike Johnson", "Sushi Haven", 5.0f, "Best sushi I've ever had! Will definitely come back."),
-            ReviewPost(4, "Emily Brown", "Pizza Paradise", 4.2f, "Delicious pizza with a wide variety of toppings."),
-            ReviewPost(5, "Chris Lee", "Taco Town", 2.5f, "Tacos were good, but a bit overpriced for the portion size.")
-        )
+    var reviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    var followerReviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+
+    // Fetch review posts asynchronously
+    LaunchedEffect(Unit) {
+        reviewPosts = recommendRestaurants()
+        followerReviewPosts = followersRecommendedRestaurant(4)
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF2F4F5))) {
@@ -63,7 +55,7 @@ fun SocialScreen(innerPadding: PaddingValues) {
 
         when (selectedTab) {
             0 -> ForYouTab(reviewPosts)
-            1 -> FollowingTab()
+            1 -> ForYouTab(followerReviewPosts)
         }
     }
 }
