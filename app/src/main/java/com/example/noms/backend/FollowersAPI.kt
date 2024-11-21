@@ -15,7 +15,7 @@ suspend fun getFollowers(uid: Int): List<User> {
     val listFollowerIds: List<Int> = followerList.map { it.follower_id }
     val followers = supabase.from("users").select(){
         filter {
-            isIn("id", listFollowerIds)
+            isIn("uid", listFollowerIds)
         }
     }.decodeList<User>()
     return followers
@@ -30,7 +30,7 @@ suspend fun getFollowing(uid: Int): List<User> {
     val listFollowerIds: List<Int> = followerList.map { it.follower_id }
     val followers = supabase.from("users").select(){
         filter {
-            isIn("id", listFollowerIds)
+            isIn("uid", listFollowerIds)
         }
     }.decodeList<User>()
     return followers
@@ -71,4 +71,13 @@ suspend fun getFollowerCount(uid: Int): Int {
         }
     }.decodeList<Follow>()
     return followercount.size
+}
+
+suspend fun unfollowUser(follower_uid:Int, following_uid:Int){
+    supabase.from("followers").delete{
+        filter{
+            eq("follower_id", follower_uid)
+            eq("followee_id", following_uid)
+        }
+    }
 }
