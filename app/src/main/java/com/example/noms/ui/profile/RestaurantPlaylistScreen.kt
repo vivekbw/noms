@@ -389,19 +389,147 @@ fun RestaurantPlaylistCard(context: Context, restaurant: Restaurant) {
 //}
 
 
+//this works rn - perfectly
+//@Composable
+//fun RestaurantPlaylistScreenWithCards(uid: Int) {
+//    val context = LocalContext.current
+//    val tag = "RestaurantPlaylist"
+//    val playlists = remember { mutableStateListOf<Playlist>() }
+//    val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
+//    var userName by remember { mutableStateOf<String?>(null) }
+//    val coroutineScope = rememberCoroutineScope()
+//
+//    // Track expanded playlists
+//    val expandedPlaylists = remember { mutableStateMapOf<Int, Boolean>() }
+//
+//    LaunchedEffect(uid) {
+//        coroutineScope.launch {
+//            try {
+//                // Fetch user's name
+//                val user = getUser(uid)
+//                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
+//
+//                // Fetch playlists for the user
+//                val fetchedPlaylists = getPlaylistsofUser(uid)
+//                playlists.clear()
+//                playlists.addAll(fetchedPlaylists)
+//
+//                // Fetch restaurants for each playlist
+//                fetchedPlaylists.forEach { playlist ->
+//                    val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
+//                    playlist.id?.let {
+//                        playlistRestaurants[it] = restaurants
+//                        expandedPlaylists[it] = false // Initialize all playlists as collapsed
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
+//            }
+//        }
+//    }
+//
+//    if (playlists.isEmpty()) {
+//        // Show a message if no playlists are found
+//        Column(
+//            modifier = Modifier.fillMaxWidth(), // Adjusted to fillMaxWidth
+//            verticalArrangement = Arrangement.Center,
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Text(
+//                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
+//                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
+//            )
+//        }
+//    } else {
+//        // Set a max height to the LazyColumn
+//        LazyColumn(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .heightIn(max = 280.dp) // Set a max height for the LazyColumn
+//                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp))
+//                .border(
+//                    width = 2.dp,
+//                    color = Color(0xFF2E8B57),
+//                    shape = RoundedCornerShape(16.dp)
+//                )
+//                .padding(16.dp),
+//            verticalArrangement = Arrangement.spacedBy(8.dp),
+//            contentPadding = PaddingValues(bottom = 64.dp)
+//        ) {
+//            playlists.forEach { playlist ->
+//                item {
+//                    Column(modifier = Modifier.fillMaxWidth()) {
+//                        // Playlist Row
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .border(
+//                                    width = 2.dp,
+//                                    color = Color(0xFF2E8B57),
+//                                    shape = RoundedCornerShape(50)
+//                                )
+//                                .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50))
+//                                .padding(horizontal = 16.dp, vertical = 12.dp)
+//                                .clickable {
+//                                    playlist.id?.let {
+//                                        expandedPlaylists[it] = !(expandedPlaylists[it] ?: false)
+//                                    }
+//                                },
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.SpaceBetween
+//                        ) {
+//                            // Playlist Name
+//                            Text(
+//                                text = playlist.name,
+//                                style = MaterialTheme.typography.bodyMedium,
+//                                color = Color.Black
+//                            )
+//
+//                            // Expand/Collapse Indicator
+//                            Icon(
+//                                imageVector = if (expandedPlaylists[playlist.id] == true) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+//                                contentDescription = null,
+//                                tint = Color(0xFF2E8B57)
+//                            )
+//                        }
+//
+//                        // Restaurants under this playlist (expand/collapse)
+//                        if (expandedPlaylists[playlist.id] == true) {
+//                            playlistRestaurants[playlist.id]?.let { restaurants ->
+//                                Column(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+//                                ) {
+//                                    restaurants.forEach { restaurant ->
+//                                        RestaurantPlaylistCard(context = context, restaurant = restaurant)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun RestaurantPlaylistScreenWithCards(uid: Int) {
     val context = LocalContext.current
     val tag = "RestaurantPlaylist"
+
+    // Mutable state for playlists and restaurants
     val playlists = remember { mutableStateListOf<Playlist>() }
     val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
     var userName by remember { mutableStateOf<String?>(null) }
+    var dataUpdated by remember { mutableStateOf(false) } // State flag to trigger recomposition
     val coroutineScope = rememberCoroutineScope()
 
     // Track expanded playlists
     val expandedPlaylists = remember { mutableStateMapOf<Int, Boolean>() }
 
+    // LaunchedEffect to fetch the data
     LaunchedEffect(uid) {
         coroutineScope.launch {
             try {
@@ -411,27 +539,42 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
 
                 // Fetch playlists for the user
                 val fetchedPlaylists = getPlaylistsofUser(uid)
-                playlists.clear()
-                playlists.addAll(fetchedPlaylists)
+                playlists.clear()  // Clear existing playlists and add new ones
+                playlists.addAll(fetchedPlaylists)  // This triggers recomposition because of mutableStateListOf
 
                 // Fetch restaurants for each playlist
                 fetchedPlaylists.forEach { playlist ->
                     val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
                     playlist.id?.let {
-                        playlistRestaurants[it] = restaurants
+                        playlistRestaurants[it] = restaurants // This triggers recomposition on playlistRestaurants
                         expandedPlaylists[it] = false // Initialize all playlists as collapsed
                     }
                 }
+
+                // Trigger recomposition after data is fetched and updated
+                dataUpdated = true // This manually triggers recomposition
             } catch (e: Exception) {
                 Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
             }
         }
     }
 
-    if (playlists.isEmpty()) {
+    if (!dataUpdated) {
+        // Display loading state
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Loading playlists...",
+                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
+            )
+        }
+    } else if (playlists.isEmpty()) {
         // Show a message if no playlists are found
         Column(
-            modifier = Modifier.fillMaxWidth(), // Adjusted to fillMaxWidth
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -513,6 +656,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
         }
     }
 }
+
 
 
 @Composable
