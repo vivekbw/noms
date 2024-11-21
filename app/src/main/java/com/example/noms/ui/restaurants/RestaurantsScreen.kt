@@ -94,6 +94,9 @@ import androidx.compose.material3.IconButton
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.platform.LocalConfiguration
 
 
 @Composable
@@ -176,10 +179,10 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
-    
+    var selectedPlaylistId by remember { mutableStateOf<Int?>(null) }
     var searchQuery by remember { mutableStateOf(TextFieldValue()) }
     var searchResults by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
-    
+
     val waterloo = LatLng(43.4643, -80.5204)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(waterloo, 10f)
@@ -200,12 +203,17 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
     }
 
     LaunchedEffect(Unit) {
-        locationPermissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+        try {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
             )
-        )
+        } catch (e: Exception) {
+            Log.e("RestaurantsScreen", "Error with getting user location permission: ${e.message}")
+        }
+
     }
 
     LaunchedEffect(Unit) {
@@ -227,7 +235,7 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
                         val latLng = LatLng(it.latitude, it.longitude)
                         coroutineScope.launch {
                             cameraPositionState.animate(
-                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                                update = CameraUpdateFactory.newLatLngZoom(latLng, 30f),
                                 durationMs = 1000
                             )
                         }
@@ -239,10 +247,8 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
         }
     }
 
-    // Add state for visible restaurants
     val visibleRestaurants = remember { mutableStateListOf<Restaurant>() }
 
-    // Update visible restaurants when the camera moves
     LaunchedEffect(cameraPositionState.position) {
         val visibleBounds = cameraPositionState.projection?.visibleRegion?.latLngBounds
         visibleBounds?.let { bounds ->
@@ -253,31 +259,38 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { newValue ->
-                    searchQuery = newValue
-                    coroutineScope.launch {
-                        searchResults = searchPlaces(context, newValue.text)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = { Text("Search for restaurants") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
-            )
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-            BottomSheetScaffold(
-                scaffoldState = scaffoldState,
-                sheetContent = {
+    if (isLandscape) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(0.4f)
+                    .fillMaxHeight()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { newValue ->
+                            searchQuery = newValue
+                            coroutineScope.launch {
+                                searchResults = searchPlaces(context, newValue.text)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        placeholder = { Text("Search for restaurants") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+                    )
+
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(bottom = 100.dp)
+                        contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        // Use visibleRestaurants instead of restaurants
                         items(visibleRestaurants) { restaurant ->
                             RestaurantCard(
                                 context = context,
@@ -289,7 +302,86 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
                                     parseLocationString(restaurant.location)?.let { latLng ->
                                         coroutineScope.launch {
                                             cameraPositionState.animate(
-                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
+                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 30f),
+                                                durationMs = 1000
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(0.6f)
+                    .fillMaxHeight()
+            ) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
+                ) {
+                    restaurants.forEach { restaurant ->
+                        parseLocationString(restaurant.location)?.let { latLng ->
+                            Marker(
+                                state = MarkerState(position = latLng),
+                                title = restaurant.name,
+                                snippet = "Rating: ${restaurant.rating}",
+                                onClick = {
+                                    coroutineScope.launch {
+                                        cameraPositionState.animate(
+                                            update = CameraUpdateFactory.newLatLngZoom(latLng, 30f),
+                                            durationMs = 1000
+                                        )
+                                    }
+                                    true
+                                }
+                            )
+                        }
+                    }
+                }
+
+                IconButton(
+                    onClick = { getCurrentLocation() },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .background(Color.White, CircleShape)
+                        .size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "My Location",
+                        tint = Color(0xFF2E8B57)
+                    )
+                }
+            }
+        }
+    } else {
+        // Portrait layout
+        Box(modifier = Modifier.fillMaxSize()) {
+            BottomSheetScaffold(
+                scaffoldState = scaffoldState,
+                sheetContent = {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(bottom = 100.dp)
+                    ) {
+                        items(visibleRestaurants) { restaurant ->
+                            RestaurantCard(
+                                context = context,
+                                restaurant = restaurant,
+                                onAddReviewClick = {
+                                    navController.navigate("restaurantDetails/${restaurant.placeId}")
+                                },
+                                onCardClick = {
+                                    parseLocationString(restaurant.location)?.let { latLng ->
+                                        coroutineScope.launch {
+                                            cameraPositionState.animate(
+                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 30f),
                                                 durationMs = 1000
                                             )
                                         }
@@ -306,184 +398,321 @@ fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues)
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState,
-                        properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
-                    ) {
-                        restaurants.forEach { restaurant ->
-                            parseLocationString(restaurant.location)?.let { latLng ->
-                                Marker(
-                                    state = MarkerState(position = latLng),
-                                    title = restaurant.name,
-                                    snippet = "Rating: ${restaurant.rating}",
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            cameraPositionState.animate(
-                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
-                                                durationMs = 1000
-                                            )
-                                        }
-                                        true
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        IconButton(
-                            onClick = { getCurrentLocation() },
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(16.dp)
-                                .background(Color.White, CircleShape)
-                                .size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "My Location",
-                                tint = Color(0xFF2E8B57)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        if (searchResults.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 80.dp)
-                    .background(Color.White)
-            ) {
-                items(searchResults) { prediction ->
-                    Text(
-                        text = prediction.getFullText(null).toString(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable {
-                                selectedPrediction = prediction
-                                showDialog = true
-                                searchQuery = TextFieldValue()
-                                searchResults = emptyList()
-                            }
-                    )
-                }
-            }
-        }
-
-        if (showDialog && selectedPrediction != null) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showDialog = false
-                    selectedPrediction = null
-                },
-                title = {
-                    Text(
-                        text = selectedPrediction!!.getFullText(null).toString(),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                confirmButton = {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp, start = 16.dp, end = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                showDialog = false
-                                showPlaylistDialog = true
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { newValue ->
+                                searchQuery = newValue
                                 coroutineScope.launch {
-                                    try {
-                                        val fetchedPlaylists = getPlaylistsofUser(15)
-                                        playlists.clear()
-                                        playlists.addAll(fetchedPlaylists)
-                                    } catch (e: Exception) {
-                                        Log.e("RestaurantsScreen", "Error fetching playlists: ${e.message}")
+                                    searchResults = searchPlaces(context, newValue.text)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            placeholder = { Text("Search for restaurants") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+                        )
+
+                        Box(modifier = Modifier.weight(1f)) {
+                            GoogleMap(
+                                modifier = Modifier.fillMaxSize(),
+                                cameraPositionState = cameraPositionState,
+                                properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
+                            ) {
+                                restaurants.forEach { restaurant ->
+                                    parseLocationString(restaurant.location)?.let { latLng ->
+                                        Marker(
+                                            state = MarkerState(position = latLng),
+                                            title = restaurant.name,
+                                            snippet = "Rating: ${restaurant.rating}",
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    cameraPositionState.animate(
+                                                        update = CameraUpdateFactory.newLatLngZoom(latLng, 30f),
+                                                        durationMs = 1000
+                                                    )
+                                                }
+                                                true
+                                            }
+                                        )
                                     }
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
-                        ) {
-                            Text("Add to Playlist")
-                        }
-                        Button(
-                            onClick = {
-                                // Add review functionality will go here
-                                showDialog = false
-                                selectedPrediction = null
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
-                        ) {
-                            Text("Add Review")
-                        }
-                    }
-                },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            )
-        }
+                            }
 
-        if (showPlaylistDialog && selectedPrediction != null) {
-            AlertDialog(
-                onDismissRequest = { 
-                    showPlaylistDialog = false
-                    selectedPrediction = null
-                },
-                title = {
-                    Text(
-                        text = "Select Playlist",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                },
-                text = {
-                    LazyColumn {
-                        items(playlists) { playlist ->
-                            Row(
+                            IconButton(
+                                onClick = { getCurrentLocation() },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .align(Alignment.BottomStart)
+                                    .padding(16.dp)
+                                    .background(Color.White, CircleShape)
+                                    .size(40.dp)
                             ) {
-                                Text(
-                                    text = playlist.name,
-                                    modifier = Modifier.weight(1f)
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = "My Location",
+                                    tint = Color(0xFF2E8B57)
                                 )
-                                Button(
-                                    onClick = { /* Add functionality later */ },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
-                                ) {
-                                    Text("Add")
-                                }
                             }
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showPlaylistDialog = false
-                            selectedPrediction = null
-                        }
-                    ) {
-                        Text("Close")
-                    }
-                },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(16.dp)
-            )
+                }
+            }
         }
+    }
+
+    if (searchResults.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 80.dp)
+                .background(Color.White)
+        ) {
+            items(searchResults) { prediction ->
+                Text(
+                    text = prediction.getFullText(null).toString(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clickable {
+                            coroutineScope.launch {
+                                getPlaceDetails(context, prediction.placeId)?.let { place ->
+                                    place.latLng?.let { latLng ->
+                                        Log.d("RestaurantSearch", "Selected restaurant coordinates: lat=${latLng.latitude}, lng=${latLng.longitude}")
+                                    }
+                                }
+                            }
+                            selectedPrediction = prediction
+                            showDialog = true
+                            searchQuery = TextFieldValue()
+                            searchResults = emptyList()
+                        }
+                )
+            }
+        }
+    }
+
+    if (showDialog && selectedPrediction != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+                selectedPrediction = null
+            },
+            title = {
+                Text(
+                    text = selectedPrediction!!.getFullText(null).toString(),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp, start = 16.dp, end = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                Log.d("RestaurantsScreen", "Starting add restaurant process from search dialog")
+                                getPlaceDetails(context, selectedPrediction!!.placeId)?.let { place ->
+                                    place.latLng?.let { latLng ->
+                                        val locationString = "${latLng.latitude},${latLng.longitude}"
+                                        Log.d("RestaurantsScreen", "Attempting to add restaurant with location: $locationString")
+                                        try {
+                                            val newRestaurant = Restaurant(
+                                                name = place.name ?: selectedPrediction!!.getPrimaryText(null).toString(),
+                                                location = locationString,
+                                                rating = 0.0f,
+                                                placeId = selectedPrediction!!.placeId,
+                                                description = ""
+                                            )
+
+                                            addRestaurant(
+                                                location = locationString,
+                                                name = newRestaurant.name,
+                                                placeId = newRestaurant.placeId
+                                            )
+
+                                            Log.d("RestaurantsScreen", "Successfully added/verified restaurant in Supabase")
+
+                                            restaurants.add(newRestaurant)
+
+                                            cameraPositionState.projection?.visibleRegion?.latLngBounds?.let { bounds ->
+                                                if (isLocationVisible(newRestaurant.location, bounds)) {
+                                                    visibleRestaurants.add(newRestaurant)
+                                                }
+                                            }
+
+                                            showDialog = false
+                                            val placeId = selectedPrediction!!.placeId
+                                            selectedPrediction = null
+                                            navController.navigate("restaurantDetails/$placeId")
+
+                                        } catch (e: Exception) {
+                                            Log.e("RestaurantsScreen", "Failed to add restaurant to Supabase", e)
+                                            Log.e("RestaurantsScreen", "Error details: ${e.message}")
+                                        }
+                                    } ?: Log.e("RestaurantsScreen", "Failed to get LatLng from place details")
+                                } ?: Log.e("RestaurantsScreen", "Failed to get place details")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                    ) {
+                        Text("Add Review")
+                    }
+
+                    Button(
+                        onClick = {
+                            showDialog = false
+                            showPlaylistDialog = true
+                            coroutineScope.launch {
+                                try {
+                                    val fetchedPlaylists = getPlaylistsofUser(15) // TODO: get current user
+                                    playlists.clear()
+                                    playlists.addAll(fetchedPlaylists)
+                                } catch (e: Exception) {
+                                    Log.e("RestaurantsScreen", "Error fetching playlists: ${e.message}")
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                    ) {
+                        Text("Add to Playlist")
+                    }
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+
+    LaunchedEffect(showPlaylistDialog) {
+        if (showPlaylistDialog) {
+            try {
+                val userPlaylists = getPlaylistsofUser(15) //TODO: Replace with actual user ID
+                playlists.clear()
+                playlists.addAll(userPlaylists)
+            } catch (e: Exception) {
+                Log.e("RestaurantsScreen", "Error fetching playlists: ${e.message}")
+            }
+        }
+    }
+
+
+    fun updateRestaurantLists(newRestaurant: Restaurant) {
+        if (!restaurants.any { it.placeId == newRestaurant.placeId }) {
+            restaurants.add(newRestaurant)
+        }
+
+        cameraPositionState.projection?.visibleRegion?.latLngBounds?.let { bounds ->
+            if (isLocationVisible(newRestaurant.location, bounds)) {
+                if (!visibleRestaurants.any { it.placeId == newRestaurant.placeId }) {
+                    visibleRestaurants.add(newRestaurant)
+                }
+            }
+        }
+    }
+
+
+    if (showPlaylistDialog) {
+        AlertDialog(
+            onDismissRequest = { showPlaylistDialog = false },
+            title = { Text("Add to Playlist") },
+            text = {
+                LazyColumn {
+                    items(playlists) { playlist ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedPlaylistId = playlist.id
+                                }
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = playlist.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (selectedPlaylistId == playlist.id)
+                                    Color(0xFF2E8B57) else Color.Black
+                            )
+                            if (selectedPlaylistId == playlist.id) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = "Selected",
+                                    tint = Color(0xFF2E8B57)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            selectedPlaylistId?.let { pid ->
+                                try {
+                                    getPlaceDetails(context, selectedPrediction!!.placeId)?.let { place ->
+                                        place.latLng?.let { latLng ->
+                                            val locationString = "${latLng.latitude},${latLng.longitude}"
+
+                                            val newRestaurant = Restaurant(
+                                                name = place.name ?: selectedPrediction!!.getPrimaryText(null).toString(),
+                                                location = locationString,
+                                                rating = place.rating?.toFloat() ?: 0.0f,
+                                                placeId = selectedPrediction!!.placeId,
+                                                description = ""
+                                            )
+
+                                            addRestaurant(
+                                                location = locationString,
+                                                name = newRestaurant.name,
+                                                placeId = newRestaurant.placeId
+                                            )
+
+                                            val allRestaurants = getAllRestaurants()
+                                            val restaurant = allRestaurants.find { it.placeId == selectedPrediction!!.placeId }
+
+                                            restaurant?.rid?.let { rid ->
+                                                addRestaurantToPlaylist(rid = rid, pid = pid)
+                                                Log.d("RestaurantsScreen", "Added restaurant to playlist successfully")
+
+                                                updateRestaurantLists(restaurant)
+                                            }
+                                        }
+                                    }
+
+                                    showPlaylistDialog = false
+                                    selectedPlaylistId = null
+                                    selectedPrediction = null
+
+                                } catch (e: Exception) {
+                                    Log.e("RestaurantsScreen", "Error adding to playlist: ${e.message}")
+                                }
+                            }
+                        }
+                    },
+                    enabled = selectedPlaylistId != null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2E8B57),
+                        disabledContainerColor = Color.Gray
+                    )
+                ) {
+                    Text("Add to Playlist")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPlaylistDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -566,7 +795,6 @@ fun RestaurantCard(
                             .clip(RoundedCornerShape(8.dp))
                     )
                 } else {
-                    // Placeholder for the image
                     Box(
                         modifier = Modifier
                             .size(100.dp)
@@ -702,7 +930,6 @@ suspend fun getPlaceDetails(context: Context, placeId: String): Place? {
 }
 
 
-// Add this function to check if a location is within the visible map bounds
 fun isLocationVisible(location: String, visibleRegion: LatLngBounds): Boolean {
     return parseLocationString(location)?.let { latLng ->
         visibleRegion.contains(latLng)

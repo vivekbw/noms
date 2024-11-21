@@ -3,6 +3,7 @@ package com.example.noms.backend
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.filter.TextSearchType
+import android.util.Log
 
 // Convert latitude and longitude to a comma-separated string
 fun latLngToString(latitude: Double, longitude: Double): String {
@@ -39,17 +40,21 @@ suspend fun getAllRestaurants(): List<Restaurant>{
     return restaurants
 }
 
-suspend fun searchByLocation(location: String): Boolean{
-    val result = supabase.from("restaurants").select(columns = Columns.list("location")){
-        filter{
-            textSearch(column = "location", query = location, textSearchType = TextSearchType.TSVECTOR)
+suspend fun searchByLocation(location: String): Boolean {
+//    Log.d("RestaurantsAPI", "Searching for restaurant at location: $location")
+    val result = supabase.from("restaurants").select(columns = Columns.list("location")) {
+        filter {
+            eq("location", location)
         }
     }.data
+//    Log.d("RestaurantsAPI", "Search result: $result")
     return result != "[]"
 }
 
-suspend fun addRestaurant(location: String, name:String, placeId:String){
-    if (!searchByLocation(location)){
+suspend fun addRestaurant(location: String, name: String, placeId: String) {
+//    Log.d("RestaurantsAPI", "Checking if restaurant exists at location: $location")
+    if (!searchByLocation(location)) {
+//        Log.d("RestaurantsAPI", "Restaurant not found, creating new entry")
         val newRestaurant = Restaurant(
             name = name,
             location = location,
@@ -57,6 +62,14 @@ suspend fun addRestaurant(location: String, name:String, placeId:String){
             placeId = placeId,
             description = ""
         )
-        supabase.from("restaurants").insert(newRestaurant)
+        try {
+            supabase.from("restaurants").insert(newRestaurant)
+            Log.d("RestaurantsAPI", "Successfully added new restaurant: $name")
+        } catch (e: Exception) {
+            Log.e("RestaurantsAPI", "Failed to insert restaurant", e)
+            throw e
+        }
+    } else {
+        Log.d("RestaurantsAPI", "Restaurant already exists at location: $location")
     }
 }
