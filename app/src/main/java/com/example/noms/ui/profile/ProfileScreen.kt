@@ -1893,6 +1893,61 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             )
         }
 
+        // Following and Followers Buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    navController.navigate("Followers")
+                },
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .height(36.dp)
+                    .border(
+                        width = 2.dp,
+                        color = seaGreen,
+                        shape = RoundedCornerShape(50)
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "Followers",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = seaGreen,
+                    maxLines = 1
+                )
+            }
+
+            Button(
+                onClick = {
+                    navController.navigate("Following")
+                },
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .height(36.dp)
+                    .border(
+                        width = 2.dp,
+                        color = seaGreen,
+                        shape = RoundedCornerShape(50)
+                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = "Following",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = seaGreen,
+                    maxLines = 1
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         // Create Playlist Button
