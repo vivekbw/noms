@@ -131,12 +131,8 @@ fun MainScreen() {
                 ProfileScreen(navController, innerPadding)
             }
 
-//            composable("Followers") {
-//                FollowersScreen(currentUserId = 15) // Pass the current user ID
-//            }
-
             composable("Followers") {
-                FollowersScreen(navController = navController, currentUserId = 15) // Pass the current user ID
+                FollowersScreen(navController = navController, currentUserId = getCurrentUid()) // Pass the current user ID
             }
 
             composable(
@@ -148,7 +144,7 @@ fun MainScreen() {
             }
 
             composable("RestaurantPlaylists") {
-                RestaurantPlaylistScreenWithCards(uid = 15) // Replace with dynamic user ID
+                RestaurantPlaylistScreenWithCards(uid = getCurrentUid()) // Replace with dynamic user ID
             }
 
             composable(
