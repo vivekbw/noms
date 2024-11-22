@@ -1813,13 +1813,7 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
         currentUser?.phoneNumber?.let { phone ->
             coroutineScope.launch {
                 try {
-                    val formattedPhone = phone.replace(Regex("(\\+\\d)(\\d{3})(\\d{3})(\\d{4})"), "$1 $2-$3-$4")
-                    val result = supabase.from("users").select() {
-                        filter {
-                            eq("phone_number", formattedPhone)
-                        }
-                    }.decodeSingle<User>()
-                    user = result
+                    user = getUser(getCurrentUid())
                 } catch (e: Exception) {
                     println("Error: ${e.message}")
                     Toast.makeText(context, "Error fetching user data: ${e.message}", Toast.LENGTH_SHORT).show()

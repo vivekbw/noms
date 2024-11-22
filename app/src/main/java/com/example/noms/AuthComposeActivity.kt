@@ -60,9 +60,10 @@ class AuthComposeActivity : ComponentActivity() {
         // Launch a coroutine to handle the suspend function
         lifecycleScope.launch {
             val phoneNumber = auth.currentUser?.phoneNumber
+            Log.i("User phonenumber", phoneNumber.toString())
             if (phoneNumber != null) {
                 setCurrentUser(phoneNumber)
-                Log.i("User INFORMATION", phoneNumber)
+                Log.i("User confirmedN", phoneNumber)
                 Log.i("Confirm User", getCurrentUid().toString())
             } else {
                 Log.i("User INFORMATION", "No phone number available")
@@ -348,6 +349,7 @@ fun LoginScreen(auth: FirebaseAuth, onBack: () -> Unit) {
                     
                     coroutineScope.launch {
                         try {
+                            Log.i("PhoneNUMBER", phoneNumber)
                             val userExists = confirmUser(phoneNumber)
                             if (!userExists) {
                                 Toast.makeText(context, "User doesn't exist. Please register.", Toast.LENGTH_SHORT).show()
