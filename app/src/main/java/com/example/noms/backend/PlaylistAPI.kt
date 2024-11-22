@@ -1,5 +1,8 @@
 package com.example.noms.backend
 
+import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import io.github.jan.supabase.postgrest.from
 
 // PlayList Functions
@@ -30,6 +33,8 @@ suspend fun getPlaylist(pid: Int): List<Restaurant> {
     return restaurants
 }
 
+
+
 suspend fun createPlaylist(name:String, uid:Int){
     val newPlaylist = Playlist(
         uid = uid,
@@ -45,6 +50,17 @@ suspend fun addRestaurantToPlaylist(rid:Int, pid:Int){
     )
     supabase.from("playlist_restaurants").insert(addRestaurant)
 }
+
+suspend fun getPlaylistId(name: String): Int? {
+    // Fetch the playlist ID based on the playlist name
+    val result = supabase.from("playlists").select() {
+        filter {
+            eq("name", name)
+        }
+    }.decodeSingle<Playlist>()  // Decode the result into a Playlist object
+    return result.id
+}
+
 
 suspend fun followPlaylist(uid: Int, pid:Int){
     val follow = FollowPlaylist(
