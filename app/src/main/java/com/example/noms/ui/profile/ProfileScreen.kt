@@ -63,6 +63,7 @@ import com.example.noms.backend.User
 import com.example.noms.backend.addRestaurantToPlaylist
 import com.example.noms.backend.createPlaylist
 import com.example.noms.backend.getAllRestaurants
+import com.example.noms.backend.getCurrentUid
 import com.example.noms.backend.getPlaylistId
 import com.example.noms.backend.supabase
 import com.google.firebase.auth.FirebaseAuth
@@ -2045,7 +2046,7 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
                                 coroutineScope.launch {
                                     try {
                                         // Step 1: Create a new playlist with the entered name
-                                        createPlaylist(playlistName, uid = user?.uid ?: 15)
+                                        createPlaylist(playlistName, uid = user?.uid ?: getCurrentUid())
 
                                         // Step 2: Get the newly created playlist ID
                                         val playlistId = getPlaylistId(playlistName)
@@ -2110,7 +2111,7 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
                 )
         ) {
             // Replace with your actual composable that displays playlists
-            RestaurantPlaylistScreenWithCards(uid = user?.uid ?: 15)
+            RestaurantPlaylistScreenWithCards(uid = user?.uid ?: getCurrentUid())
         }
 
         Spacer(modifier = Modifier.height(20.dp))
