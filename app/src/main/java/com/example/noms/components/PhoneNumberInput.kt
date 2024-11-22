@@ -91,11 +91,7 @@ fun PhoneNumberInput(
                 if (input.length <= 10 && input.all { it.isDigit() }) {
                     rawPhoneNumber = input
                     // Format: +1 XXX-XXX-XXXX
-                    val formatted = when {
-                        input.length >= 7 -> "${countryCode} ${input.substring(0, 3)}-${input.substring(3, 6)}-${input.substring(6)}"
-                        input.length >= 4 -> "${countryCode} ${input.substring(0, 3)}-${input.substring(3)}"
-                        else -> "${countryCode} $input"
-                    }
+                    val formatted = "${countryCode}$input"
                     onValueChange(formatted)
                 }
             },
