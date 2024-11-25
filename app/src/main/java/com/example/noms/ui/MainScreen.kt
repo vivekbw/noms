@@ -39,10 +39,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.noms.R
 import com.example.noms.backend.*
-import com.example.noms.ui.followers.FollowersScreen
-import com.example.noms.ui.profile.ProfileScreen
-import com.example.noms.ui.profile.RestaurantPlaylistScreen
-import com.example.noms.ui.profile.RestaurantPlaylistScreenWithCards
+import com.example.noms.ui.profile.View.FollowersScreen
+import com.example.noms.ui.profile.Views.ProfileScreen
+import com.example.noms.ui.profile.Views.RestaurantPlaylistScreenWithCards
 import com.example.noms.ui.restaurants.RestaurantDetailsScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
 import com.example.noms.ui.social.SocialScreen
