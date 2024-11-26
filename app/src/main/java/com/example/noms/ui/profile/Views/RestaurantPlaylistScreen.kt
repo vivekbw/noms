@@ -39,39 +39,8 @@ import com.example.noms.backend.Restaurant
 import com.example.noms.backend.getUser
 import com.example.noms.ui.restaurants.fetchPhoto
 import com.example.noms.ui.restaurants.fetchPhotoReference
-
-suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
-    val tag = "RestaurantPlaylist" // Tag for logging
-
-    try {
-        // Get playlists of the user
-        val playlists = getPlaylistsofUser(uid)
-        if (playlists.isEmpty()) {
-            Log.i(tag, "No playlists found for user $uid")
-            return
-        }
-
-        // Iterate through each playlist and fetch the restaurants
-        playlists.forEach { playlist ->
-            Log.i(tag, "Fetching restaurants for playlist: ${playlist.name} (ID: ${playlist.id})")
-
-            val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
-            if (restaurants.isEmpty()) {
-                Log.i(tag, "No restaurants found in playlist: ${playlist.name}")
-            } else {
-                Log.i(tag, "Restaurants in playlist '${playlist.name}':")
-                restaurants.forEach { restaurant ->
-                    Log.i(
-                        tag,
-                        "- ${restaurant.name} at ${restaurant.location} [Rating: ${restaurant.rating}]"
-                    )
-                }
-            }
-        }
-    } catch (e: Exception) {
-        Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
-    }
-}
+import com.example.noms.ui.profile.ViewModels.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 //Fetching restaurants for playlist: AidenTestPlaylist (ID: 2)
@@ -83,31 +52,33 @@ suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
 
 
 @Composable
-fun RestaurantPlaylistCard(context: Context, restaurant: Restaurant) {
-    var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+fun RestaurantPlaylistCard(
+    context: Context,
+    restaurant: Restaurant,
+) {
+    val viewModel: RestaurantPlaylistCardViewModel = viewModel(
+        key = restaurant.placeId,
+        factory = RestaurantPlaylistCardViewModel.Factory(restaurant.placeId)
+    )
 
-    // Fetch photo when the card is loaded
+    val photoBitmap by viewModel.photoBitmap.collectAsState()
+
+    // Trigger photo fetching when the card is loaded
     LaunchedEffect(restaurant.placeId) {
-        coroutineScope.launch {
-            val photoMetadata = fetchPhotoReference(context, restaurant.placeId)
-            if (photoMetadata != null) {
-                photoBitmap = fetchPhoto(context, photoMetadata)
-            }
-        }
+        viewModel.getPhoto(context, restaurant.placeId)
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp) // Spacing between cards
+            .padding(vertical = 8.dp)
             .border(
                 width = 2.dp,
-                color = Color(0xFF2E8B57), // Green border
-                shape = RoundedCornerShape(16.dp) // Rounded corners
+                color = Color(0xFF2E8B57),
+                shape = RoundedCornerShape(16.dp)
             )
-            .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(16.dp)) // Light grey background
-            .padding(horizontal = 16.dp, vertical = 12.dp), // Inner padding
+            .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -118,37 +89,37 @@ fun RestaurantPlaylistCard(context: Context, restaurant: Restaurant) {
         ) {
             Text(
                 text = restaurant.name,
-                style = MaterialTheme.typography.bodyMedium, // Medium text style
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
+//            Uncomment if description is needed
 //            Text(
 //                text = restaurant.description,
-//                style = MaterialTheme.typography.bodySmall, // Smaller text style
+//                style = MaterialTheme.typography.bodySmall,
 //                color = Color.Gray
 //            )
         }
 
-        // Display Photo
+        // Display Photo or Placeholder
         if (photoBitmap != null) {
             Image(
                 bitmap = photoBitmap!!.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(50.dp)
-                    .clip(RoundedCornerShape(8.dp)) // Rounded corners for the image
+                    .clip(RoundedCornerShape(8.dp))
             )
         } else {
-            // Placeholder for the image while loading
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(Color.LightGray, RoundedCornerShape(8.dp)), // Placeholder styling
+                    .background(Color.LightGray, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Img",
-                    style = TextStyle(fontSize = 12.sp, color = Color.DarkGray) // Placeholder text
+                    style = TextStyle(fontSize = 12.sp, color = Color.DarkGray)
                 )
             }
         }
@@ -158,484 +129,113 @@ fun RestaurantPlaylistCard(context: Context, restaurant: Restaurant) {
 
 
 
-//@Composable
-//fun RestaurantPlaylistScreenWithCards(uid: Int) {
-//    val context = LocalContext.current // Get the context
-//    val tag = "RestaurantPlaylist"
-//    val playlists = remember { mutableStateListOf<Playlist>() }
-//    val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
-//    var userName by remember { mutableStateOf<String?>(null) } // State for user's name
-//    val coroutineScope = rememberCoroutineScope()
-//
-//    LaunchedEffect(uid) {
-//        coroutineScope.launch {
-//            try {
-//                // Fetch user's name
-//                val user = getUser(uid) // Use the existing getUser function
-//                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
-//
-//                // Fetch playlists for the user
-//                val fetchedPlaylists = getPlaylistsofUser(uid)
-//                playlists.clear()
-//                playlists.addAll(fetchedPlaylists)
-//
-//                // Fetch restaurants for each playlist
-//                fetchedPlaylists.forEach { playlist ->
-//                    val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
-//                    playlist.id?.let { playlistRestaurants[it] = restaurants }
-//                }
-//            } catch (e: Exception) {
-//                Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
-//            }
-//        }
-//    }
-//
-//    if (playlists.isEmpty()) {
-//        // Show a message if no playlists are found
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            BasicText(
-//                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
-//                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
-//            )
-//        }
-//    } else {
-//        // Enclosing LazyColumn with a grey pill-shaped background and green border
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .border(
-//                    width = 2.dp,
-//                    color = Color(0xFF2E8B57), // Green border
-//                    shape = RoundedCornerShape(16.dp)
-//                )
-//                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp)) // Grey background
-//                .padding(16.dp) // Padding inside the enclosing box
-//        ) {
-//            LazyColumn(
-//                modifier = Modifier.fillMaxSize(),
-//                verticalArrangement = Arrangement.spacedBy(16.dp),
-//                contentPadding = PaddingValues(bottom = 64.dp) // Add padding for better UI
-//            ) {
-//                playlists.forEach { playlist ->
-//                    item {
-//                        Column(modifier = Modifier.fillMaxWidth()) {
-//                            // Playlist Name
-//                            Text(
-//                                text = playlist.name,
-//                                style = MaterialTheme.typography.titleSmall,
-//                                color = Color(0xFF2E8B57),
-//                                modifier = Modifier
-//                                    .padding(bottom = 8.dp)
-//                                    .align(Alignment.Start)
-//                            )
-//
-//                            // Restaurants under this playlist
-//                            playlistRestaurants[playlist.id]?.let { restaurants ->
-//                                restaurants.forEach { restaurant ->
-//                                    RestaurantPlaylistCard(context = context, restaurant = restaurant)
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-
-//default rn
-//@Composable
-//fun RestaurantPlaylistScreenWithCards(uid: Int) {
-//    val context = LocalContext.current
-//    val tag = "RestaurantPlaylist"
-//    val playlists = remember { mutableStateListOf<Playlist>() }
-//    val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
-//    var userName by remember { mutableStateOf<String?>(null) }
-//    val coroutineScope = rememberCoroutineScope()
-//
-//    // Track expanded playlists
-//    val expandedPlaylists = remember { mutableStateMapOf<Int, Boolean>() }
-//
-//    LaunchedEffect(uid) {
-//        coroutineScope.launch {
-//            try {
-//                // Fetch user's name
-//                val user = getUser(uid)
-//                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
-//
-//                // Fetch playlists for the user
-//                val fetchedPlaylists = getPlaylistsofUser(uid)
-//                playlists.clear()
-//                playlists.addAll(fetchedPlaylists)
-//
-//                // Fetch restaurants for each playlist
-//                fetchedPlaylists.forEach { playlist ->
-//                    val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
-//                    playlist.id?.let {
-//                        playlistRestaurants[it] = restaurants
-//                        expandedPlaylists[it] = false // Initialize all playlists as collapsed
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
-//            }
-//        }
-//    }
-//
-//    if (playlists.isEmpty()) {
-//        // Show a message if no playlists are found
-//        Column(
-//            modifier = Modifier.fillMaxSize(),
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            BasicText(
-//                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
-//                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
-//            )
-//        }
-//    } else {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-////                .fillMaxWidth(1f) // Adjust width to 90% of the screen size
-////                .heightIn(max = 300.dp)
-//                .border(
-//                    width = 2.dp,
-//                    color = Color(0xFF2E8B57), // Green border
-//                    shape = RoundedCornerShape(16.dp)
-//                )
-//                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp)) // Grey background
-//                .padding(16.dp) // Padding inside the enclosing box
-//        ) {
-//            LazyColumn(
-//                modifier = Modifier.fillMaxSize(),
-//                verticalArrangement = Arrangement.spacedBy(8.dp),
-//                contentPadding = PaddingValues(bottom = 64.dp)
-//            ) {
-//                playlists.forEach { playlist ->
-//                    item {
-//                        Column(modifier = Modifier.fillMaxWidth()) {
-//                            // Playlist Row (similar to the Follower card styling)
-//                            Row(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .border(
-//                                        width = 2.dp,
-//                                        color = Color(0xFF2E8B57), // Green border
-//                                        shape = RoundedCornerShape(50) // Rounded corners for pill shape
-//                                    )
-//                                    .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50)) // Light grey background
-//                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-//                                    .clickable {
-//                                        playlist.id?.let {
-//                                            expandedPlaylists[it] = !(expandedPlaylists[it] ?: false)
-//                                        }
-//                                    },
-//                                verticalAlignment = Alignment.CenterVertically,
-//                                horizontalArrangement = Arrangement.SpaceBetween
-//                            ) {
-//                                // Playlist Name
-//                                Text(
-//                                    text = playlist.name,
-//                                    style = MaterialTheme.typography.bodyMedium,
-//                                    color = Color.Black
-//                                )
-//
-//                                // Expand/Collapse Indicator
-//                                Icon(
-//                                    imageVector = if (expandedPlaylists[playlist.id] == true) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-//                                    contentDescription = null,
-//                                    tint = Color(0xFF2E8B57) // Green tint for the icon
-//                                )
-//                            }
-//
-//                            // Restaurants under this playlist (expand/collapse)
-//                            if (expandedPlaylists[playlist.id] == true) {
-//                                playlistRestaurants[playlist.id]?.let { restaurants ->
-//                                    Column(
-//                                        modifier = Modifier
-//                                            .fillMaxWidth()
-//                                            .padding(horizontal = 8.dp, vertical = 4.dp)
-//                                    ) {
-//                                        restaurants.forEach { restaurant ->
-//                                            RestaurantPlaylistCard(context = context, restaurant = restaurant)
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-//this works rn - perfectly
-//@Composable
-//fun RestaurantPlaylistScreenWithCards(uid: Int) {
-//    val context = LocalContext.current
-//    val tag = "RestaurantPlaylist"
-//    val playlists = remember { mutableStateListOf<Playlist>() }
-//    val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
-//    var userName by remember { mutableStateOf<String?>(null) }
-//    val coroutineScope = rememberCoroutineScope()
-//
-//    // Track expanded playlists
-//    val expandedPlaylists = remember { mutableStateMapOf<Int, Boolean>() }
-//
-//    LaunchedEffect(uid) {
-//        coroutineScope.launch {
-//            try {
-//                // Fetch user's name
-//                val user = getUser(uid)
-//                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
-//
-//                // Fetch playlists for the user
-//                val fetchedPlaylists = getPlaylistsofUser(uid)
-//                playlists.clear()
-//                playlists.addAll(fetchedPlaylists)
-//
-//                // Fetch restaurants for each playlist
-//                fetchedPlaylists.forEach { playlist ->
-//                    val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
-//                    playlist.id?.let {
-//                        playlistRestaurants[it] = restaurants
-//                        expandedPlaylists[it] = false // Initialize all playlists as collapsed
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
-//            }
-//        }
-//    }
-//
-//    if (playlists.isEmpty()) {
-//        // Show a message if no playlists are found
-//        Column(
-//            modifier = Modifier.fillMaxWidth(), // Adjusted to fillMaxWidth
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Text(
-//                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
-//                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
-//            )
-//        }
-//    } else {
-//        // Set a max height to the LazyColumn
-//        LazyColumn(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .heightIn(max = 280.dp) // Set a max height for the LazyColumn
-//                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp))
-//                .border(
-//                    width = 2.dp,
-//                    color = Color(0xFF2E8B57),
-//                    shape = RoundedCornerShape(16.dp)
-//                )
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(8.dp),
-//            contentPadding = PaddingValues(bottom = 64.dp)
-//        ) {
-//            playlists.forEach { playlist ->
-//                item {
-//                    Column(modifier = Modifier.fillMaxWidth()) {
-//                        // Playlist Row
-//                        Row(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .border(
-//                                    width = 2.dp,
-//                                    color = Color(0xFF2E8B57),
-//                                    shape = RoundedCornerShape(50)
-//                                )
-//                                .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50))
-//                                .padding(horizontal = 16.dp, vertical = 12.dp)
-//                                .clickable {
-//                                    playlist.id?.let {
-//                                        expandedPlaylists[it] = !(expandedPlaylists[it] ?: false)
-//                                    }
-//                                },
-//                            verticalAlignment = Alignment.CenterVertically,
-//                            horizontalArrangement = Arrangement.SpaceBetween
-//                        ) {
-//                            // Playlist Name
-//                            Text(
-//                                text = playlist.name,
-//                                style = MaterialTheme.typography.bodyMedium,
-//                                color = Color.Black
-//                            )
-//
-//                            // Expand/Collapse Indicator
-//                            Icon(
-//                                imageVector = if (expandedPlaylists[playlist.id] == true) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-//                                contentDescription = null,
-//                                tint = Color(0xFF2E8B57)
-//                            )
-//                        }
-//
-//                        // Restaurants under this playlist (expand/collapse)
-//                        if (expandedPlaylists[playlist.id] == true) {
-//                            playlistRestaurants[playlist.id]?.let { restaurants ->
-//                                Column(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-//                                ) {
-//                                    restaurants.forEach { restaurant ->
-//                                        RestaurantPlaylistCard(context = context, restaurant = restaurant)
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
 @Composable
-fun RestaurantPlaylistScreenWithCards(uid: Int) {
+fun RestaurantPlaylistScreenWithCards(
+    uid: Int,
+    viewModel: RestaurantPlaylistViewModel = viewModel()
+) {
     val context = LocalContext.current
-    val tag = "RestaurantPlaylist"
+    val playlists by viewModel.playlists.collectAsState()
+    val playlistRestaurants by viewModel.playlistRestaurants.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
-    // Mutable state for playlists and restaurants
-    val playlists = remember { mutableStateListOf<Playlist>() }
-    val playlistRestaurants = remember { mutableStateMapOf<Int, List<Restaurant>>() }
-    var userName by remember { mutableStateOf<String?>(null) }
-    var dataUpdated by remember { mutableStateOf(false) } // State flag to trigger recomposition
-    val coroutineScope = rememberCoroutineScope()
-
-    // Track expanded playlists
-    val expandedPlaylists = remember { mutableStateMapOf<Int, Boolean>() }
-
-    // LaunchedEffect to fetch the data
+    // Trigger data fetch when screen is composed
     LaunchedEffect(uid) {
-        coroutineScope.launch {
-            try {
-                // Fetch user's name
-                val user = getUser(uid)
-                userName = user?.let { "${it.first_name} ${it.last_name}" } ?: "Unknown User"
-
-                // Fetch playlists for the user
-                val fetchedPlaylists = getPlaylistsofUser(uid)
-                playlists.clear()  // Clear existing playlists and add new ones
-                playlists.addAll(fetchedPlaylists)  // This triggers recomposition because of mutableStateListOf
-
-                // Fetch restaurants for each playlist
-                fetchedPlaylists.forEach { playlist ->
-                    val restaurants = playlist.id?.let { getPlaylist(it) } ?: emptyList()
-                    playlist.id?.let {
-                        playlistRestaurants[it] = restaurants // This triggers recomposition on playlistRestaurants
-                        expandedPlaylists[it] = false // Initialize all playlists as collapsed
-                    }
-                }
-
-                // Trigger recomposition after data is fetched and updated
-                dataUpdated = true // This manually triggers recomposition
-            } catch (e: Exception) {
-                Log.e(tag, "Error fetching playlists or restaurants: ${e.message}", e)
-            }
-        }
+        viewModel.fetchData(uid)
     }
 
-    if (!dataUpdated) {
-        // Display loading state
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Loading playlists...",
-                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
-            )
-        }
-    } else if (playlists.isEmpty()) {
-        // Show a message if no playlists are found
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
-                style = TextStyle(fontSize = 18.sp, color = Color.Gray)
-            )
-        }
-    } else {
-        // Set a max height to the LazyColumn
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 280.dp) // Set a max height for the LazyColumn
-                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp))
-                .border(
-                    width = 2.dp,
-                    color = Color(0xFF2E8B57),
-                    shape = RoundedCornerShape(16.dp)
+    when {
+        loading -> {
+            // Loading State
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Loading playlists...",
+                    style = TextStyle(fontSize = 18.sp, color = Color.Gray)
                 )
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 64.dp)
-        ) {
-            playlists.forEach { playlist ->
-                item {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        // Playlist Row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 2.dp,
-                                    color = Color(0xFF2E8B57),
-                                    shape = RoundedCornerShape(50)
+            }
+        }
+        playlists.isEmpty() -> {
+            // No Playlists Found
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = if (userName != null) "No playlists found for $userName." else "No playlists found.",
+                    style = TextStyle(fontSize = 18.sp, color = Color.Gray)
+                )
+            }
+        }
+        else -> {
+            // Display Playlists and Restaurants
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 280.dp)
+                    .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp))
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF2E8B57),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 64.dp)
+            ) {
+                playlists.forEach { playlist ->
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            // Playlist Row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color(0xFF2E8B57),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50))
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .clickable {
+                                        playlist.id?.let {
+                                            viewModel.togglePlaylistExpansion(it)
+                                        }
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Playlist Name
+                                Text(
+                                    text = playlist.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Black
                                 )
-                                .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50))
-                                .padding(horizontal = 16.dp, vertical = 12.dp)
-                                .clickable {
-                                    playlist.id?.let {
-                                        expandedPlaylists[it] = !(expandedPlaylists[it] ?: false)
-                                    }
-                                },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            // Playlist Name
-                            Text(
-                                text = playlist.name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Black
-                            )
 
-                            // Expand/Collapse Indicator
-                            Icon(
-                                imageVector = if (expandedPlaylists[playlist.id] == true) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = Color(0xFF2E8B57)
-                            )
-                        }
+                                // Expand/Collapse Indicator
+                                Icon(
+                                    imageVector = if (viewModel.isPlaylistExpanded(playlist.id!!)) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    tint = Color(0xFF2E8B57)
+                                )
+                            }
 
-                        // Restaurants under this playlist (expand/collapse)
-                        if (expandedPlaylists[playlist.id] == true) {
-                            playlistRestaurants[playlist.id]?.let { restaurants ->
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    restaurants.forEach { restaurant ->
-                                        RestaurantPlaylistCard(context = context, restaurant = restaurant)
+                            // Restaurants under this playlist (expand/collapse)
+                            if (viewModel.isPlaylistExpanded(playlist.id!!)) {
+                                playlistRestaurants[playlist.id]?.let { restaurants ->
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        restaurants.forEach { restaurant ->
+                                            RestaurantPlaylistCard(context = context, restaurant = restaurant)
+                                        }
                                     }
                                 }
                             }
@@ -646,6 +246,7 @@ fun RestaurantPlaylistScreenWithCards(uid: Int) {
         }
     }
 }
+
 
 
 
