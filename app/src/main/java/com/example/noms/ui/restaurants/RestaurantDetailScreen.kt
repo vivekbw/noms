@@ -292,18 +292,35 @@ fun RestaurantDetailsScreen(
             // Review Screen with a callback to add new reviews to the list
             ReviewScreen { reviewText, rating ->
                 coroutineScope.launch {
-                    writeReview(4, restaurant.rid ?: 0, reviewText, rating) // Call writeReview in a coroutine (hard coded uid)
-                    reviews.add(
-                        Review(
-                            id = null, // Replace with appropriate id logic if needed
-                            created_date = "today", // Replace with actual date
-                            uid = 0, // Replace with the current user ID if available
-                            rid = restaurant.rid ?: 0,
-                            text = reviewText,
-                            rating = rating
+                    try {
+                        // Write the review
+                        writeReview(4, restaurant.rid ?: 0, reviewText, rating)
+                        
+                        // Add review to local list
+                        reviews.add(
+                            Review(
+                                id = null,
+                                created_date = "today",
+                                uid = 0,
+                                rid = restaurant.rid ?: 0,
+                                text = reviewText,
+                                rating = rating
+                            )
                         )
-                    )
-                    Log.d("TAG", "Review submitted: $reviewText, Rating: $rating")
+                        
+                        // Calculate new average rating
+                        val newAverageRating = reviews.map { it.rating }.average().toFloat()
+                        
+                        // Update restaurant rating in Supabase
+                        updateRestaurantRating(restaurant.rid ?: 0, newAverageRating)
+                        
+                        // Update local restaurant object
+                        restaurant.rating = newAverageRating
+                        
+                        Log.d("TAG", "Review submitted: $reviewText, Rating: $rating, New Average: $newAverageRating")
+                    } catch (e: Exception) {
+                        Log.e("TAG", "Error submitting review: ${e.message}")
+                    }
                 }
             }
         }

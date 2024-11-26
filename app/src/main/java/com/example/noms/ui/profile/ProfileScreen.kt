@@ -65,6 +65,7 @@ import com.example.noms.backend.createPlaylist
 import com.example.noms.backend.getAllRestaurants
 import com.example.noms.backend.getCurrentUid
 import com.example.noms.backend.getPlaylistId
+import com.example.noms.backend.getUser
 import com.example.noms.backend.supabase
 import com.google.firebase.auth.FirebaseAuth
 import io.github.jan.supabase.postgrest.from

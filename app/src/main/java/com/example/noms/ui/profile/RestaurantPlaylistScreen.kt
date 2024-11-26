@@ -46,9 +46,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.noms.backend.Playlist
 import com.example.noms.backend.Restaurant
+import com.example.noms.backend.fetchPhoto
+import com.example.noms.backend.fetchPhotoReference
 import com.example.noms.backend.getUser
-import com.example.noms.ui.restaurants.fetchPhoto
-import com.example.noms.ui.restaurants.fetchPhotoReference
 
 suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     val tag = "RestaurantPlaylist" // Tag for logging
