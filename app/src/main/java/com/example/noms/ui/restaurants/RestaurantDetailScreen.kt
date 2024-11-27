@@ -292,12 +292,12 @@ fun RestaurantDetailsScreen(
             // Review Screen with a callback to add new reviews to the list
             ReviewScreen { reviewText, rating ->
                 coroutineScope.launch {
-                    writeReview(4, restaurant.rid ?: 0, reviewText, rating) // Call writeReview in a coroutine (hard coded uid)
+                    writeReview(getCurrentUid(), restaurant.rid ?: 0, reviewText, rating) // Call writeReview in a coroutine (hard coded uid)
                     reviews.add(
                         Review(
                             id = null, // Replace with appropriate id logic if needed
                             created_date = "today", // Replace with actual date
-                            uid = 0, // Replace with the current user ID if available
+                            uid = getCurrentUid(), // Replace with the current user ID if available
                             rid = restaurant.rid ?: 0,
                             text = reviewText,
                             rating = rating
