@@ -75,11 +75,11 @@ import com.example.noms.backend.*
 @Composable
 fun PhotoGridScreen() {
     val photos = remember { mutableStateListOf<Bitmap?>() }
-    val maxPhotos = 6
+    val maxPhotos = 1
     val coroutineScope = rememberCoroutineScope()
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(1),
         modifier = Modifier
             .fillMaxWidth()
             .height(250.dp)
