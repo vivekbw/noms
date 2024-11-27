@@ -49,6 +49,7 @@ suspend fun searchByLocation(location: String): Boolean{
 }
 
 suspend fun addRestaurant(location: String, name:String, placeId:String){
+
     if (!searchByLocation(location)){
         val newRestaurant = Restaurant(
             name = name,

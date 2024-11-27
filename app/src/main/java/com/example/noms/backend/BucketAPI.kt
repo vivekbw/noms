@@ -23,6 +23,10 @@ suspend fun storeProfilePicture(image: Bitmap?, uid: Int) {
     supabase.storage.from("ProfileImages").upload(uid.toString(), byteArrayImage, true)
 }
 
+suspend fun createBucket(rid:Int){
+
+}
+
 suspend fun storeReviewImage(image: Bitmap?, reviewId: Int, rid: Int) {
     val byteArrayImage = bitmapToByteArray(image)
     val imageName = reviewId.toString()
