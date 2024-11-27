@@ -79,13 +79,3 @@ suspend fun followersRecommendedRestaurant(uid: Int): List<ReviewPost>{
     val followerReviews = getFollowerReviews(uid)
     return reviewsToPost(followerReviews)
 }
-
-suspend fun updateRestaurantRating(rid: Int, newRating: Float) {
-    supabase
-        .from("restaurants")
-        .update(mapOf("rating" to newRating)) {
-            filter {
-                eq("rid", rid)
-            }
-        }
-}

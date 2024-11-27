@@ -313,9 +313,6 @@ fun RestaurantDetailsScreen(
                         // Calculate new average rating
                         val newAverageRating = reviews.map { it.rating }.average().toFloat()
                         
-                        // Update restaurant rating in Supabase
-                        updateRestaurantRating(restaurant.rid ?: 0, newAverageRating)
-                        
                         // Update local restaurant object
                         restaurant.rating = newAverageRating
                         
