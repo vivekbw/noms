@@ -12,13 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.example.noms.backend.*
-import com.example.noms.ui.restaurants.fetchPhotoReference
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import com.example.noms.ui.restaurants.fetchPhoto
-import com.example.noms.ui.restaurants.fetchPhotoReference
 
 suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     val tag = "RestaurantPlaylist" // Tag for logging

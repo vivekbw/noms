@@ -37,8 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.example.noms.backend.Playlist
 import com.example.noms.backend.Restaurant
 import com.example.noms.backend.getUser
-import com.example.noms.ui.restaurants.fetchPhoto
-import com.example.noms.ui.restaurants.fetchPhotoReference
 import com.example.noms.ui.profile.ViewModels.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 
