@@ -68,8 +68,8 @@ data class ReviewPost(
     val reviewerName: String,
     val restaurantName: String,
     val rating: Float,
-    val comment: String
-//    val image: Bitmap?
+    val comment: String,
+    val image: Bitmap?
 )
 
 // For backend only, don't use this

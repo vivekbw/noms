@@ -99,8 +99,9 @@ fun PhotoGridScreen() {
 
                 // Launch coroutine to store the photo
                 coroutineScope.launch {
-                    Log.d("TAG", "Storing data")
-                    storeReviewImage(bitmap, 1, 1)  // Use `bitmap` instead of `photo`
+                    val next = getNextReviewID()?:0
+                    Log.d("TAG", "Storing data $next")
+                    storeReviewImage(bitmap, next)  // Use `bitmap` instead of `photo`
                 }
             }
         }

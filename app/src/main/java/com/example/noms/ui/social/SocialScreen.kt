@@ -29,7 +29,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import com.example.noms.R
 import android.util.Log
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.noms.backend.*
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 
 @Composable
 fun SocialScreen(innerPadding: PaddingValues) {
@@ -37,12 +40,12 @@ fun SocialScreen(innerPadding: PaddingValues) {
     val tabs = listOf("For you", "Following")
 
     var reviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
-    var followerReviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    var followingReviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
 
     // Fetch review posts asynchronously
     LaunchedEffect(Unit) {
         reviewPosts = recommendRestaurants()
-        followerReviewPosts = followersRecommendedRestaurant(4)
+        followingReviewPosts = followingRecommendedRestaurant(getCurrentUid())
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF2F4F5))) {
@@ -55,7 +58,7 @@ fun SocialScreen(innerPadding: PaddingValues) {
 
         when (selectedTab) {
             0 -> ForYouTab(reviewPosts)
-            1 -> ForYouTab(followerReviewPosts)
+            1 -> ForYouTab(followingReviewPosts)
         }
     }
 }
@@ -160,7 +163,8 @@ fun ReviewCard(review: ReviewPost) {
                     .height(200.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.img1),
+                    painter = review.image?.let { BitmapPainter(it.asImageBitmap()) }
+                        ?: painterResource(id = R.drawable.img1),
                     contentDescription = "Restaurant image",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
