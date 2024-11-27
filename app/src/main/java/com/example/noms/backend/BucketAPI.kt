@@ -7,6 +7,10 @@ import java.io.File
 import android.graphics.Bitmap
 import java.io.ByteArrayOutputStream
 
+fun byteArrayToBitmap(byteArray: ByteArray): Bitmap? {
+    return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+}
+
 fun bitmapToByteArray(bitmap: Bitmap?): ByteArray {
     val outputStream = ByteArrayOutputStream()
     // Compress the bitmap and write it to the output stream
@@ -19,8 +23,32 @@ suspend fun storeProfilePicture(image: Bitmap?, uid: Int) {
     supabase.storage.from("ProfileImages").upload(uid.toString(), byteArrayImage, true)
 }
 
-suspend fun storeReviewImage(image: Bitmap?, uid:Int, rid:Int){
+suspend fun createBucket(rid:Int){
+
+}
+
+suspend fun storeReviewImage(image: Bitmap?, reviewId: Int, rid: Int) {
     val byteArrayImage = bitmapToByteArray(image)
-    val imageName = uid.toString()+'-'+rid.toString()
-    supabase.storage.from("Images").upload(imageName, byteArrayImage, true)
+    val imageName = reviewId.toString()
+    val bucketName = rid.toString()
+
+    // Retrieve all buckets
+    val allBuckets = supabase.storage.retrieveBuckets()
+
+    // Check if a bucket with the matching name exists
+    val bucketExists = allBuckets.any { it.name == bucketName }
+
+    if (!bucketExists) {
+        // Bucket exists, continue to store the image
+        supabase.storage.createBucket(id = bucketName){
+            public = true
+        }
+    }
+    supabase.storage.from(bucketName).upload(imageName, byteArrayImage, true)
+}
+
+suspend fun getImage(reviewId: Int, rid: Int): Bitmap? {
+    val bucket = supabase.storage.from(rid.toString())
+    val bytes = bucket.downloadPublic(reviewId.toString())
+    return byteArrayToBitmap(bytes)
 }

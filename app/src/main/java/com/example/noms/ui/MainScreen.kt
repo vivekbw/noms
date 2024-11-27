@@ -39,10 +39,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.noms.R
 import com.example.noms.backend.*
-import com.example.noms.ui.followers.FollowersScreen
-import com.example.noms.ui.profile.ProfileScreen
-import com.example.noms.ui.profile.RestaurantPlaylistScreen
-import com.example.noms.ui.profile.RestaurantPlaylistScreenWithCards
+import com.example.noms.ui.profile.View.FollowersScreen
+import com.example.noms.ui.profile.Views.ProfileScreen
+import com.example.noms.ui.profile.Views.RestaurantPlaylistScreenWithCards
 import com.example.noms.ui.restaurants.RestaurantDetailsScreen
 import com.example.noms.ui.restaurants.RestaurantsScreen
 import com.example.noms.ui.social.SocialScreen
@@ -131,12 +130,8 @@ fun MainScreen() {
                 ProfileScreen(navController, innerPadding)
             }
 
-//            composable("Followers") {
-//                FollowersScreen(currentUserId = 15) // Pass the current user ID
-//            }
-
             composable("Followers") {
-                FollowersScreen(navController = navController, currentUserId = 15) // Pass the current user ID
+                FollowersScreen(navController = navController, currentUserId = getCurrentUid()) // Pass the current user ID
             }
 
             composable(
@@ -148,7 +143,7 @@ fun MainScreen() {
             }
 
             composable("RestaurantPlaylists") {
-                RestaurantPlaylistScreenWithCards(uid = 15) // Replace with dynamic user ID
+                RestaurantPlaylistScreenWithCards(uid = getCurrentUid()) // Replace with dynamic user ID
             }
 
             composable(

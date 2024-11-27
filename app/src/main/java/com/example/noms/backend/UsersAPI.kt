@@ -5,6 +5,8 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.filter.TextSearchType
 import kotlin.reflect.jvm.internal.impl.types.TypeCheckerState.SupertypesPolicy.None
 
+private var CurrentUser: User? = null
+
 suspend fun getUser(uid: Int): User? {
     val result = supabase.from("users").select(){
         filter {
@@ -13,6 +15,18 @@ suspend fun getUser(uid: Int): User? {
     }.decodeList<User>()  // Decode as a list instead of a single item
 
     return result.firstOrNull()
+}
+
+suspend fun setCurrentUser(phoneNumber: String){
+    CurrentUser = supabase.from("users").select(){
+        filter {
+            eq("phone_number", phoneNumber)
+        }
+    }.decodeList<User>().first()  // Decode as a list instead of a single item
+}
+
+fun getCurrentUid(): Int {
+    return CurrentUser?.uid ?: 1
 }
 
 suspend fun confirmUser(phoneNumber: String): Boolean{

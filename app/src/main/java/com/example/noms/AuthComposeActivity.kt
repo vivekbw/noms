@@ -3,6 +3,7 @@ package com.example.noms
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,8 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.example.noms.backend.confirmUser
 import com.example.noms.backend.createUser
+import com.example.noms.backend.getCurrentUid
 import com.example.noms.components.PhoneNumberInput
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
@@ -44,6 +47,7 @@ import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import com.example.noms.backend.setCurrentUser
 
 class AuthComposeActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -53,11 +57,25 @@ class AuthComposeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
 
+        // Launch a coroutine to handle the suspend function
+        lifecycleScope.launch {
+            val phoneNumber = auth.currentUser?.phoneNumber
+            Log.i("User phonenumber", phoneNumber.toString())
+            if (phoneNumber != null) {
+                setCurrentUser(phoneNumber)
+                Log.i("User confirmedN", phoneNumber)
+                Log.i("Confirm User", getCurrentUid().toString())
+            } else {
+                Log.i("User INFORMATION", "No phone number available")
+            }
+        }
+
         setContent {
             AuthScreen(auth, bypassAuth)
         }
     }
 }
+
 
 @Composable
 fun AuthScreen(auth: FirebaseAuth, bypassAuth: Boolean) {
@@ -331,6 +349,7 @@ fun LoginScreen(auth: FirebaseAuth, onBack: () -> Unit) {
                     
                     coroutineScope.launch {
                         try {
+                            Log.i("PhoneNUMBER", phoneNumber)
                             val userExists = confirmUser(phoneNumber)
                             if (!userExists) {
                                 Toast.makeText(context, "User doesn't exist. Please register.", Toast.LENGTH_SHORT).show()

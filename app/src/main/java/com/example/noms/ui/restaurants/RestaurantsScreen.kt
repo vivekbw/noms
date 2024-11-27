@@ -2,309 +2,522 @@ package com.example.noms.ui.restaurants
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.PhotoMetadata
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.FetchPhotoRequest
-import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.noms.backend.Playlist
+import com.example.noms.backend.Restaurant
+import com.example.noms.backend.Review
+import com.example.noms.backend.User
+import com.example.noms.backend.fetchPhoto
+import com.example.noms.backend.fetchPhotoReference
+import com.example.noms.backend.getUser
+import com.example.noms.backend.parseLocationString
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.*
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
-import androidx.navigation.NavController
-import com.example.noms.backend.*
 import io.github.jan.supabase.exceptions.HttpRequestException
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.input.TextFieldValue
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.libraries.places.api.model.AutocompletePrediction
-import com.google.android.libraries.places.api.model.TypeFilter
-import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import kotlinx.coroutines.launch
+import android.Manifest
+import com.google.maps.android.compose.Marker
+import com.example.noms.backend.addRestaurant
+import com.example.noms.backend.getAllRestaurants
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StarRatingBar(
-    maxStars: Int = 5,
-    rating: Float,
-    onRatingChanged: (Float) -> Unit
+fun RestaurantsScreen(
+    navController: NavController,
+    innerPadding: PaddingValues,
+    viewModel: RestaurantsViewModel = viewModel()
 ) {
-    val density = LocalDensity.current.density
-    val starSize = (8f * density).dp
-    val starSpacing = (0.5f * density).dp
+    val scope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    Row(
-        modifier = Modifier.selectableGroup(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        for (i in 1..maxStars) {
-            val isSelected = i <= rating
-            val icon = if (isSelected) Icons.Filled.Star else Icons.Default.Star
-            val iconTintColor = if (isSelected) Color(0xFF2E8B57) else Color.Gray
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTintColor,
-                modifier = Modifier
-                    .selectable(
-                        selected = isSelected,
-                        onClick = {
-                            onRatingChanged(i.toFloat())
-                        }
-                    )
-                    .width(starSize).height(starSize)
+    val scaffoldState = rememberBottomSheetScaffoldState()
+    val cameraPositionState = rememberCameraPositionState {
+        position = viewModel.currentCameraPosition.value
+    }
+
+    val context = LocalContext.current
+
+    // Observing ViewModel states
+    val restaurants = viewModel.restaurants
+    val visibleRestaurants = viewModel.visibleRestaurants
+    val playlists = viewModel.playlists
+    val searchQuery = viewModel.searchQuery.value
+    val searchResults = viewModel.searchResults.value
+    val showDialog = viewModel.showDialog.value
+    val selectedPrediction = viewModel.selectedPrediction.value
+    val showPlaylistDialog = viewModel.showPlaylistDialog.value
+    val selectedPlaylistId = viewModel.selectedPlaylistId.value
+
+    // Location Permission Launcher (Handle in Activity layer ideally)
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            viewModel.hasLocationPermission.value =
+                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                        permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        }
+    )
+
+    // Request permissions on first launch
+    LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
+        )
+    }
 
-            if (i < maxStars) {
-                Spacer(modifier = Modifier.width(starSpacing))
+    // Update camera position when ViewModel's current position changes
+    LaunchedEffect(viewModel.currentCameraPosition.value) {
+        cameraPositionState.position = viewModel.currentCameraPosition.value
+    }
+
+    // Update visible restaurants when camera position changes
+    LaunchedEffect(cameraPositionState.position) {
+        val latLng = cameraPositionState.position.target
+        viewModel.updateVisibleRestaurants(latLng)
+    }
+
+    LaunchedEffect(true) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is RestaurantsViewModel.NavigationEvent.NavigateToDetails -> {
+                    navController.navigate("restaurantDetails/${event.placeId}")
+                }
+
+                else -> {}
             }
         }
     }
-}
 
+    if (isLandscape) {
+        LandscapeLayout(
+            restaurants = visibleRestaurants,
+            cameraPositionState = cameraPositionState,
+            viewModel = viewModel,
+            navController = navController,
+            context = context
+        )
+    } else {
+        PortraitLayout(
+            restaurants = visibleRestaurants,
+            cameraPositionState = cameraPositionState,
+            viewModel = viewModel,
+            navController = navController,
+            context = context,
+            scaffoldState = scaffoldState
+        )
+    }
 
+    // Search Results Overlay
+    if (searchResults.isNotEmpty()) {
+        SearchResultsOverlay(
+            searchResults = searchResults,
+            onResultClick = { prediction ->
+                viewModel.onSearchResultSelected(prediction)
+            }
+        )
+    }
 
-suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
-    return withContext(Dispatchers.IO) {
-        val placesClient = Places.createClient(context)
-        val placeFields = listOf(Place.Field.PHOTO_METADATAS)
-        val request = FetchPlaceRequest.newInstance(placeId, placeFields)
-        val response = placesClient.fetchPlace(request).await()
-        response.place.photoMetadatas?.firstOrNull()
-	}
-}
+    // Add Restaurant Dialog
+    if (showDialog && selectedPrediction != null) {
+        AddRestaurantDialog(
+            prediction = selectedPrediction,
+            onConfirm = { viewModel.addRestaurantFromPrediction() },
+            onAddToPlaylist = { viewModel.showPlaylistDialog.value = true },
+            onTakeMeThere = { viewModel.takeMeToRestaurant(selectedPrediction) },
+            onDismiss = { viewModel.showDialog.value = false }
+        )
+    }
 
-
-suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? {
-    return withContext(Dispatchers.IO) {
-        val placesClient = Places.createClient(context)
-        val photoRequest = FetchPhotoRequest.builder(photoMetadata).build()
-        val response = placesClient.fetchPhoto(photoRequest).await()
-        response.bitmap
+    // Add to Playlist Dialog
+    if (showPlaylistDialog) {
+        AddToPlaylistDialog(
+            playlists = playlists,
+            selectedPlaylistId = selectedPlaylistId,
+            onSelect = { pid -> viewModel.selectedPlaylistId.value = pid },
+            onConfirm = { viewModel.addRestaurantToPlaylist() },
+            onDismiss = { viewModel.showPlaylistDialog.value = false }
+        )
     }
 }
 
-// Aiden's
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestaurantsScreen(navController: NavController, innerPadding: PaddingValues) {
-    val restaurants = remember { mutableStateListOf<Restaurant>() }
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
-    
-    var searchQuery by remember { mutableStateOf(TextFieldValue()) }
-    var searchResults by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
-    
-    val waterloo = LatLng(43.4643, -80.5204)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(waterloo, 10f)
-    }
+fun LandscapeLayout(
+    restaurants: List<Restaurant>,
+    cameraPositionState: CameraPositionState,
+    viewModel: RestaurantsViewModel,
+    navController: NavController,
+    context: Context
+) {
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Left Panel - List
+        Box(
+            modifier = Modifier
+                .weight(0.4f)
+                .fillMaxHeight()
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SearchBar(
+                    query = viewModel.searchQuery.value,
+                    onQueryChange = { viewModel.onSearchQueryChanged(it) }
+                )
 
-    LaunchedEffect(Unit) {
-        try {
-            val fetchedRestaurants = getAllRestaurants()
-            restaurants.clear()
-            restaurants.addAll(fetchedRestaurants)
-        } catch (e: Exception) {
-            Log.e("RestaurantsScreen", "Error fetching restaurants: ${e.message}")
-        }
-    }
-
-    fun parseLocationString(locationStr: String): LatLng? {
-        return try {
-            val (lat, lng) = locationStr.split(",").map { it.trim().toDouble() }
-            LatLng(lat, lng)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { newValue ->
-                    searchQuery = newValue
-                    coroutineScope.launch {
-                        searchResults = searchPlaces(context, newValue.text)
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(restaurants) { restaurant ->
+                        RestaurantCard(
+                            context = context,
+                            restaurant = restaurant,
+                            onAddReviewClick = {
+                                navController.navigate("restaurantDetails/${restaurant.placeId}")
+                            },
+                            onCardClick = {
+                                parseLocationString(restaurant.location)?.let { latLng ->
+                                    viewModel.updateVisibleRestaurants(latLng)
+                                    viewModel.currentCameraPosition.value =
+                                        CameraPosition.fromLatLngZoom(latLng, 15f)
+                                }
+                            },
+                            navController = navController
+                        )
                     }
-                },
+                }
+            }
+        }
+
+        // Right Panel - Map
+        Box(
+            modifier = Modifier
+                .weight(0.6f)
+                .fillMaxHeight()
+        ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = viewModel.hasLocationPermission.value)
+            ) {
+                restaurants.forEach { restaurant ->
+                    parseLocationString(restaurant.location)?.let { latLng ->
+                        Marker(
+                            state = MarkerState(position = latLng),
+                            title = restaurant.name,
+                            snippet = "Rating: ${restaurant.rating}",
+                            onClick = {
+                                viewModel.currentCameraPosition.value =
+                                    CameraPosition.fromLatLngZoom(latLng, 15f)
+                                true
+                            }
+                        )
+                    }
+                }
+            }
+
+            MyLocationButton(
+                onClick = { viewModel.getCurrentLocation() },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = { Text("Search for restaurants") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PortraitLayout(
+    restaurants: List<Restaurant>,
+    cameraPositionState: CameraPositionState,
+    viewModel: RestaurantsViewModel,
+    navController: NavController,
+    context: Context,
+    scaffoldState: BottomSheetScaffoldState
+) {
+    BottomSheetScaffold(
+        scaffoldState = scaffoldState,
+        sheetContent = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
+                items(restaurants) { restaurant ->
+                    RestaurantCard(
+                        context = context,
+                        restaurant = restaurant,
+                        onAddReviewClick = {
+                            navController.navigate("restaurantDetails/${restaurant.placeId}")
+                        },
+                        onCardClick = {
+                            parseLocationString(restaurant.location)?.let { latLng ->
+                                viewModel.updateVisibleRestaurants(latLng)
+                                viewModel.currentCameraPosition.value =
+                                    CameraPosition.fromLatLngZoom(latLng, 15f)
+                            }
+                        },
+                        navController = navController
+                    )
+                }
+            }
+        },
+        sheetPeekHeight = 200.dp
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            SearchBar(
+                query = viewModel.searchQuery.value,
+                onQueryChange = { viewModel.onSearchQueryChanged(it) }
             )
 
-            BottomSheetScaffold(
-                scaffoldState = scaffoldState,
-                sheetContent = {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(bottom = 100.dp)
-                    ) {
-                        items(restaurants) { restaurant ->
-                            RestaurantCard(
-                                context = context,
-                                restaurant = restaurant,
-                                onAddReviewClick = {
-                                    navController.navigate("restaurantDetails/${restaurant.placeId}")
-                                },
-                                onCardClick = {
-                                    parseLocationString(restaurant.location)?.let { latLng ->
-                                        coroutineScope.launch {
-                                            cameraPositionState.animate(
-                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
-                                                durationMs = 1000
-                                            )
-                                        }
-                                    }
+            Box(modifier = Modifier.weight(1f)) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = viewModel.hasLocationPermission.value)
+                ) {
+                    restaurants.forEach { restaurant ->
+                        parseLocationString(restaurant.location)?.let { latLng ->
+                            Marker(
+                                state = MarkerState(position = latLng),
+                                title = restaurant.name,
+                                snippet = "Rating: ${restaurant.rating}",
+                                onClick = {
+                                    viewModel.currentCameraPosition.value =
+                                        CameraPosition.fromLatLngZoom(latLng, 15f)
+                                    true
                                 }
                             )
                         }
                     }
-                },
-                sheetPeekHeight = 200.dp
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState
-                    ) {
-                        restaurants.forEach { restaurant ->
-                            parseLocationString(restaurant.location)?.let { latLng ->
-                                Marker(
-                                    state = MarkerState(position = latLng),
-                                    title = restaurant.name,
-                                    snippet = "Rating: ${restaurant.rating}",
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            cameraPositionState.animate(
-                                                update = CameraUpdateFactory.newLatLngZoom(latLng, 15f),
-                                                durationMs = 1000
-                                            )
-                                        }
-                                        true
-                                    }
-                                )
-                            }
-                        }
-                    }
                 }
-            }
-        }
 
-        if (searchResults.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 80.dp)
-                    .background(Color.White)
-            ) {
-                items(searchResults) { prediction ->
-                    Text(
-                        text = prediction.getFullText(null).toString(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable {
-                                coroutineScope.launch {
-                                    val place = getPlaceDetails(context, prediction.placeId)
-                                    place?.let { 
-                                        val latLng = LatLng(it.latLng.latitude, it.latLng.longitude)
-                                        cameraPositionState.animate(
-                                            update = CameraUpdateFactory.newLatLngZoom(latLng, 18f),
-                                            durationMs = 1000
-                                        )
-                                    }
-                                    searchQuery = TextFieldValue()
-                                    searchResults = emptyList()
-                                }
-                            }
-                    )
-                }
+                MyLocationButton(
+                    onClick = { viewModel.getCurrentLocation() },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                )
             }
         }
     }
 }
 
+@Composable
+fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = { onQueryChange(it) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        placeholder = { Text("Search for restaurants") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") }
+    )
+}
 
+@Composable
+fun SearchResultsOverlay(
+    searchResults: List<AutocompletePrediction>,
+    onResultClick: (AutocompletePrediction) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 80.dp)
+            .background(Color.White)
+    ) {
+        LazyColumn {
+            items(searchResults) { prediction ->
+                Text(
+                    text = prediction.getFullText(null).toString(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clickable { onResultClick(prediction) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AddRestaurantDialog(
+    prediction: AutocompletePrediction,
+    onConfirm: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onTakeMeThere: (AutocompletePrediction) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = prediction.getFullText(null).toString(),
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        confirmButton = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp, start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                ) {
+                    Text("Add Review")
+                }
+
+                Button(
+                    onClick = onAddToPlaylist,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                ) {
+                    Text("Add to Playlist")
+                }
+
+                Button(
+                    onClick = { onTakeMeThere(prediction) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                ) {
+                    Text("Take Me There")
+                }
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(16.dp)
+    )
+}
+
+@Composable
+fun AddToPlaylistDialog(
+    playlists: List<Playlist>,
+    selectedPlaylistId: Int?,
+    onSelect: (Int?) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add to Playlist") },
+        text = {
+            LazyColumn {
+                items(playlists) { playlist ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(playlist.id) }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = playlist.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (selectedPlaylistId == playlist.id)
+                                Color(0xFF2E8B57) else Color.Black
+                        )
+                        if (selectedPlaylistId == playlist.id) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Selected",
+                                tint = Color(0xFF2E8B57)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = selectedPlaylistId != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedPlaylistId != null) Color(0xFF2E8B57) else Color.Gray
+                )
+            ) {
+                Text("Add to Playlist")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun MyLocationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .background(Color.White, CircleShape)
+            .size(40.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "My Location",
+            tint = Color(0xFF2E8B57)
+        )
+    }
+}
 
 @Composable
 fun RestaurantCard(
     context: Context,
     restaurant: Restaurant,
     onAddReviewClick: () -> Unit,
-    onCardClick: () -> Unit
+    onCardClick: () -> Unit,
+    navController: NavController
 ) {
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -361,7 +574,7 @@ fun RestaurantCard(
                         maxStars = 5,
                         rating = restaurant.rating,
                         onRatingChanged = { newRating ->
-                            println("New rating: $newRating")
+                            // Handle rating change if needed
                         }
                     )
                 }
@@ -376,7 +589,6 @@ fun RestaurantCard(
                             .clip(RoundedCornerShape(8.dp))
                     )
                 } else {
-                    // Placeholder for the image
                     Box(
                         modifier = Modifier
                             .size(100.dp)
@@ -390,7 +602,26 @@ fun RestaurantCard(
             }
 
             Button(
-                onClick = onAddReviewClick,
+                onClick = {
+                    // Navigate immediately
+                    navController.navigate("restaurantDetails/${restaurant.placeId}")
+                    
+                    // Handle restaurant addition in the background
+                    coroutineScope.launch {
+                        try {
+                            val existingRestaurants = getAllRestaurants()
+                            if (existingRestaurants.none { it.placeId == restaurant.placeId }) {
+                                addRestaurant(
+                                    location = restaurant.location,
+                                    name = restaurant.name,
+                                    placeId = restaurant.placeId
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.e("RestaurantCard", "Error handling restaurant: ${e.message}")
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
@@ -402,6 +633,45 @@ fun RestaurantCard(
     }
 }
 
+@Composable
+fun StarRatingBar(
+    maxStars: Int = 5,
+    rating: Float,
+    onRatingChanged: (Float) -> Unit
+) {
+    val density = LocalDensity.current.density
+    val starSize = (8f * density).dp
+    val starSpacing = (0.5f * density).dp
+
+    Row(
+        modifier = Modifier.selectableGroup(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        for (i in 1..maxStars) {
+            val isSelected = i <= rating
+            val icon = if (isSelected) Icons.Filled.Star else Icons.Outlined.Star
+            val iconTintColor = if (isSelected) Color(0xFF2E8B57) else Color.Gray
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTintColor,
+                modifier = Modifier
+                    .selectable(
+                        selected = isSelected,
+                        onClick = {
+                            onRatingChanged(i.toFloat())
+                        }
+                    )
+                    .width(starSize).height(starSize)
+            )
+
+            if (i < maxStars) {
+                Spacer(modifier = Modifier.width(starSpacing))
+            }
+        }
+    }
+}
 
 @Composable
 fun ReviewsList(reviews: List<Review>) {
@@ -465,48 +735,6 @@ fun ReviewCard(review: Review) {
                 rating = review.rating,
                 onRatingChanged = {}
             )
-        }
-    }
-}
-
-
-suspend fun searchPlaces(context: Context, query: String): List<AutocompletePrediction> {
-    return withContext(Dispatchers.IO) {
-        val placesClient = Places.createClient(context)
-        val request = FindAutocompletePredictionsRequest.builder()
-            .setQuery(query)
-            .setTypeFilter(TypeFilter.ESTABLISHMENT)
-            .build()
-
-        try {
-            val response = placesClient.findAutocompletePredictions(request).await()
-            response.autocompletePredictions.filter { prediction ->
-                prediction.placeTypes.contains(Place.Type.RESTAURANT)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
-}
-
-suspend fun getPlaceDetails(context: Context, placeId: String): Place? {
-    return withContext(Dispatchers.IO) {
-        val placesClient = Places.createClient(context)
-        val request = FetchPlaceRequest.newInstance(placeId, listOf(
-            Place.Field.ID,
-            Place.Field.NAME,
-            Place.Field.LAT_LNG,
-            Place.Field.ADDRESS,
-            Place.Field.RATING
-        ))
-
-        try {
-            val response = placesClient.fetchPlace(request).await()
-            response.place
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
 }
