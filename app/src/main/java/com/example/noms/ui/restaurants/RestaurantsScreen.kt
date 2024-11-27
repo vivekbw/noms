@@ -118,6 +118,18 @@ fun RestaurantsScreen(
         viewModel.updateVisibleRestaurants(latLng)
     }
 
+    LaunchedEffect(true) {
+        viewModel.navigationEvents.collect { event ->
+            when (event) {
+                is RestaurantsViewModel.NavigationEvent.NavigateToDetails -> {
+                    navController.navigate("restaurantDetails/${event.placeId}")
+                }
+
+                else -> {}
+            }
+        }
+    }
+
     if (isLandscape) {
         LandscapeLayout(
             restaurants = visibleRestaurants,
@@ -153,6 +165,7 @@ fun RestaurantsScreen(
             prediction = selectedPrediction,
             onConfirm = { viewModel.addRestaurantFromPrediction() },
             onAddToPlaylist = { viewModel.showPlaylistDialog.value = true },
+            onTakeMeThere = { viewModel.takeMeToRestaurant(selectedPrediction) },
             onDismiss = { viewModel.showDialog.value = false }
         )
     }
@@ -210,7 +223,8 @@ fun LandscapeLayout(
                                     viewModel.currentCameraPosition.value =
                                         CameraPosition.fromLatLngZoom(latLng, 15f)
                                 }
-                            }
+                            },
+                            navController = navController
                         )
                     }
                 }
@@ -284,7 +298,8 @@ fun PortraitLayout(
                                 viewModel.currentCameraPosition.value =
                                     CameraPosition.fromLatLngZoom(latLng, 15f)
                             }
-                        }
+                        },
+                        navController = navController
                     )
                 }
             }
@@ -374,6 +389,7 @@ fun AddRestaurantDialog(
     prediction: AutocompletePrediction,
     onConfirm: () -> Unit,
     onAddToPlaylist: () -> Unit,
+    onTakeMeThere: (AutocompletePrediction) -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -405,6 +421,14 @@ fun AddRestaurantDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
                 ) {
                     Text("Add to Playlist")
+                }
+
+                Button(
+                    onClick = { onTakeMeThere(prediction) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E8B57))
+                ) {
+                    Text("Take Me There")
                 }
             }
         },
@@ -492,7 +516,8 @@ fun RestaurantCard(
     context: Context,
     restaurant: Restaurant,
     onAddReviewClick: () -> Unit,
-    onCardClick: () -> Unit
+    onCardClick: () -> Unit,
+    navController: NavController
 ) {
     var photoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -579,7 +604,7 @@ fun RestaurantCard(
             Button(
                 onClick = {
                     // Navigate immediately
-                    onAddReviewClick()
+                    navController.navigate("restaurantDetails/${restaurant.placeId}")
                     
                     // Handle restaurant addition in the background
                     coroutineScope.launch {

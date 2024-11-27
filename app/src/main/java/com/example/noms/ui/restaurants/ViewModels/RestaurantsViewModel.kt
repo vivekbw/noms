@@ -132,11 +132,24 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
      */
     fun updateVisibleRestaurants(currentLatLng: LatLng) {
         viewModelScope.launch {
-            val bounds = calculateBounds(currentLatLng)
+            // Get the visible region from the current camera position
+            val visibleRegion = LatLngBounds(
+                LatLng(
+                    currentLatLng.latitude - (0.01 * (20 - currentCameraPosition.value.zoom)),
+                    currentLatLng.longitude - (0.01 * (20 - currentCameraPosition.value.zoom))
+                ),
+                LatLng(
+                    currentLatLng.latitude + (0.01 * (20 - currentCameraPosition.value.zoom)),
+                    currentLatLng.longitude + (0.01 * (20 - currentCameraPosition.value.zoom))
+                )
+            )
+
             visibleRestaurants.clear()
             visibleRestaurants.addAll(
                 restaurants.filter { restaurant ->
-                    isLocationVisible(restaurant.location, bounds)
+                    parseLocationString(restaurant.location)?.let { latLng ->
+                        visibleRegion.contains(latLng)
+                    } ?: false
                 }
             )
         }
@@ -388,6 +401,65 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
         } catch (e: Exception) {
             Log.e("RestaurantsViewModel", "Error parsing location string: ${e.message}")
             null
+        }
+    }
+
+    private fun calculateDistance(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Double {
+        val R = 6371 // Earth's radius in kilometers
+        val latDistance = Math.toRadians(lat2 - lat1)
+        val lonDistance = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
+    }
+
+    fun takeMeToRestaurant(prediction: AutocompletePrediction) {
+        viewModelScope.launch {
+            try {
+                val place = getPlaceDetails(context, prediction.placeId)
+                place?.latLng?.let { latLng ->
+                    // Update camera position to zoom to the restaurant
+                    currentCameraPosition.value = CameraPosition.fromLatLngZoom(latLng, 15f)
+                    
+                    // Create restaurant object
+                    val locationString = "${latLng.latitude},${latLng.longitude}"
+                    val newRestaurant = Restaurant(
+                        name = place.name ?: prediction.getPrimaryText(null).toString(),
+                        location = locationString,
+                        rating = place.rating?.toFloat() ?: 0.0f,
+                        placeId = prediction.placeId,
+                        description = ""
+                    )
+
+                    // Add to backend if it doesn't exist
+                    val existingRestaurants = getAllRestaurants()
+                    if (existingRestaurants.none { it.placeId == prediction.placeId }) {
+                        addRestaurant(
+                            location = locationString,
+                            name = newRestaurant.name,
+                            placeId = newRestaurant.placeId
+                        )
+                    }
+
+                    // Add to local restaurants list if not already present
+                    if (!restaurants.any { it.placeId == prediction.placeId }) {
+                        restaurants.add(newRestaurant)
+                    }
+
+                    // Update visible restaurants
+                    updateVisibleRestaurants(latLng)
+                }
+            } catch (e: Exception) {
+                Log.e("RestaurantsViewModel", "Error taking to restaurant: ${e.message}")
+            }
+            
+            // Close the dialog
+            showDialog.value = false
         }
     }
 }

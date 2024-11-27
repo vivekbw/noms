@@ -293,20 +293,22 @@ fun RestaurantDetailsScreen(
             ReviewScreen { reviewText, rating ->
                 coroutineScope.launch {
                     try {
-                        // Write the review
-                        writeReview(4, restaurant.rid ?: 0, reviewText, rating)
+                        val current_user = getCurrentUid()
+                        val userData = getUser(current_user)  // Fetch user data
                         
-                        // Add review to local list
-                        reviews.add(
-                            Review(
-                                id = null,
-                                created_date = "today",
-                                uid = 0,
-                                rid = restaurant.rid ?: 0,
-                                text = reviewText,
-                                rating = rating
-                            )
+                        // Write the review
+                        writeReview(current_user, restaurant.rid ?: 0, reviewText, rating)
+                        
+                        // Add review to local list with user data
+                        val newReview = Review(
+                            id = null,
+                            created_date = "today",
+                            uid = current_user,  // Use actual user ID
+                            rid = restaurant.rid ?: 0,
+                            text = reviewText,
+                            rating = rating
                         )
+                        reviews.add(newReview)
                         
                         // Calculate new average rating
                         val newAverageRating = reviews.map { it.rating }.average().toFloat()
