@@ -121,7 +121,7 @@ fun CustomTab(
 fun ForYouTab(reviewPosts: List<ReviewPost>) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(reviewPosts) { post ->
