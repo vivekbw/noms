@@ -36,11 +36,12 @@ import io.github.jan.supabase.exceptions.HttpRequestException
  * ViewModel for managing restaurant data, search functionality, location updates, and playlists.
  */
 class RestaurantsViewModel(application: Application) : AndroidViewModel(application) {
+    private val mapsApiKey = remoteConfig.getString("google_maps_key")
 
     // Initialize Places API
     init {
         if (!Places.isInitialized()) {
-            Places.initialize(application, "YOUR_API_KEY") // TODO: Replace with your actual API key
+            Places.initialize(application, mapsApiKey)
         }
     }
 
@@ -89,7 +90,7 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
     init {
         viewModelScope.launch {
             fetchAllRestaurants()
-            fetchUserPlaylists(userId = 15) // TODO: Replace with actual user ID
+            fetchUserPlaylists(getCurrentUid())
         }
     }
 
@@ -105,7 +106,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
             updateVisibleRestaurants(currentCameraPosition.value.target)
         } catch (e: Exception) {
             Log.e("RestaurantsViewModel", "Error fetching restaurants: ${e.message}")
-            // TODO: Handle error appropriately, e.g., emit an error event
         }
     }
 
@@ -121,7 +121,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
             playlists.addAll(fetchedPlaylists)
         } catch (e: Exception) {
             Log.e("RestaurantsViewModel", "Error fetching playlists: ${e.message}")
-            // TODO: Handle error appropriately
         }
     }
 
@@ -246,11 +245,9 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                         selectedPrediction.value = null
                     } ?: run {
                         Log.e("RestaurantsViewModel", "Failed to get LatLng from place details")
-                        // TODO: Handle this error, possibly emit an error event
                     }
                 } catch (e: Exception) {
                     Log.e("RestaurantsViewModel", "Failed to add restaurant: ${e.message}")
-                    // TODO: Handle error appropriately
                 }
             }
         }
@@ -299,7 +296,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                                     "RestaurantsViewModel",
                                     "Restaurant not found after adding to backend"
                                 )
-                                // TODO: Handle this error
                             }
 
                             // Reset dialog states
@@ -308,11 +304,9 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                             selectedPrediction.value = null
                         } ?: run {
                             Log.e("RestaurantsViewModel", "Failed to get LatLng from place details")
-                            // TODO: Handle this error
                         }
                     } catch (e: Exception) {
                         Log.e("RestaurantsViewModel", "Error adding to playlist: ${e.message}")
-                        // TODO: Handle error appropriately
                     }
                 }
             }
@@ -359,11 +353,9 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                     }
             } catch (e: SecurityException) {
                 Log.e("RestaurantsViewModel", "Error getting location", e)
-                // TODO: Handle the security exception
             }
         } else {
             Log.w("RestaurantsViewModel", "Location permission not granted")
-            // TODO: Emit an event or update UI to prompt for permissions
         }
     }
 
