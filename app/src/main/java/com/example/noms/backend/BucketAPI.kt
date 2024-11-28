@@ -23,32 +23,24 @@ suspend fun storeProfilePicture(image: Bitmap?, uid: Int) {
     supabase.storage.from("ProfileImages").upload(uid.toString(), byteArrayImage, true)
 }
 
-suspend fun createBucket(rid:Int){
-
+suspend fun findImage(rid:Int): Boolean{
+    val images = supabase.storage.from("Images")
+    val files = images.list()
+    return files.any { it.name == rid.toString()}
 }
 
-suspend fun storeReviewImage(image: Bitmap?, reviewId: Int, rid: Int) {
+suspend fun storeReviewImage(image: Bitmap?, reviewId: Int) {
     val byteArrayImage = bitmapToByteArray(image)
     val imageName = reviewId.toString()
-    val bucketName = rid.toString()
 
-    // Retrieve all buckets
-    val allBuckets = supabase.storage.retrieveBuckets()
-
-    // Check if a bucket with the matching name exists
-    val bucketExists = allBuckets.any { it.name == bucketName }
-
-    if (!bucketExists) {
-        // Bucket exists, continue to store the image
-        supabase.storage.createBucket(id = bucketName){
-            public = true
-        }
-    }
-    supabase.storage.from(bucketName).upload(imageName, byteArrayImage, true)
+    supabase.storage.from("Images").upload(imageName, byteArrayImage, true)
 }
 
-suspend fun getImage(reviewId: Int, rid: Int): Bitmap? {
-    val bucket = supabase.storage.from(rid.toString())
+suspend fun getImage(reviewId: Int): Bitmap? {
+    if (!findImage(reviewId)){
+        return null
+    }
+    val bucket = supabase.storage.from("Images")
     val bytes = bucket.downloadPublic(reviewId.toString())
     return byteArrayToBitmap(bytes)
 }

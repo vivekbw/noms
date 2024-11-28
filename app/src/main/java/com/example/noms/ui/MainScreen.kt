@@ -40,6 +40,7 @@ import androidx.navigation.navArgument
 import com.example.noms.R
 import com.example.noms.backend.*
 import com.example.noms.ui.profile.View.FollowersScreen
+import com.example.noms.ui.profile.Views.FollowingScreen
 import com.example.noms.ui.profile.Views.ProfileScreen
 import com.example.noms.ui.profile.Views.RestaurantPlaylistScreenWithCards
 import com.example.noms.ui.restaurants.RestaurantDetailsScreen
@@ -132,6 +133,10 @@ fun MainScreen() {
 
             composable("Followers") {
                 FollowersScreen(navController = navController, currentUserId = getCurrentUid()) // Pass the current user ID
+            }
+
+            composable("Following"){
+                FollowingScreen(navController = navController, currentUserId = getCurrentUid()) // Pass the current user ID
             }
 
             composable(

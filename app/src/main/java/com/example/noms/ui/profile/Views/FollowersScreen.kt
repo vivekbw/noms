@@ -127,7 +127,7 @@ fun FollowersScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 64.dp)
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 items(filteredUsers.size) { index ->
                     val user = filteredUsers[index]
@@ -144,7 +144,6 @@ fun FollowersScreen(
         }
     }
 }
-
 
 
 

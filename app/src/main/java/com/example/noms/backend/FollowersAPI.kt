@@ -27,7 +27,7 @@ suspend fun getFollowing(uid: Int): List<User> {
             eq("follower_id", uid)
         }
     }.decodeList<Follow>()
-    val listFollowerIds: List<Int> = followerList.map { it.follower_id }
+    val listFollowerIds: List<Int> = followerList.map { it.followee_id }
     val followers = supabase.from("users").select(){
         filter {
             isIn("uid", listFollowerIds)
