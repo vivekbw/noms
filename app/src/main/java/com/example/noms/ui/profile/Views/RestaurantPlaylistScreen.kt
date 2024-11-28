@@ -48,6 +48,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 //2024-11-08 14:46:22.123 15831-15831 RestaurantPlaylist      com.example.noms                     I  - Shinwa at 456 Elm St [Rating: 1.0]
 
 
+/**
+ * This is the restaurant playlist card for the restaurant playlist screen.
+ * 
+ * @param context The context for the screen.
+ * @param restaurant The restaurant to display.
+ */
 
 @Composable
 fun RestaurantPlaylistCard(
@@ -126,6 +132,12 @@ fun RestaurantPlaylistCard(
 
 
 
+/**
+ * This is the restaurant playlist screen with cards for the restaurant playlist screen.
+ * 
+ * @param uid The user id.
+ * @param viewModel The view model for managing the restaurant playlist.
+ */
 
 @Composable
 fun RestaurantPlaylistScreenWithCards(
@@ -246,7 +258,11 @@ fun RestaurantPlaylistScreenWithCards(
 }
 
 
-
+/**
+ * This is the restaurant playlist screen.
+ * 
+ * @param uid The user id.
+ */
 
 @Composable
 fun RestaurantPlaylistScreen(uid: Int) {

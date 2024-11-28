@@ -17,6 +17,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+/**
+ * This is the function to fetch the user playlists and restaurants.
+ * 
+ * @param uid The user id.
+ */
+
 suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     val tag = "RestaurantPlaylist" // Tag for logging
 
@@ -50,6 +56,13 @@ suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     }
 }
 
+
+/**
+ * This is the view model for the restaurant playlist card.
+ * 
+ * @param placeId The place id.
+ */
+
 class RestaurantPlaylistCardViewModel(private val placeId: String) : ViewModel() {
     private val _photoBitmap = MutableStateFlow<Bitmap?>(null)
     val photoBitmap: StateFlow<Bitmap?> = _photoBitmap
@@ -71,6 +84,10 @@ class RestaurantPlaylistCardViewModel(private val placeId: String) : ViewModel()
     }
 }
 
+
+/**
+ * This is the view model for the restaurant playlist screen.
+ */
 
 class RestaurantPlaylistViewModel : ViewModel() {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())

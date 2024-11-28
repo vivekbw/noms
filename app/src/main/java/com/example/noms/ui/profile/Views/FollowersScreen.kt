@@ -23,6 +23,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.noms.backend.User
 
+
+/**
+ * This is the follower card for the followers screen.
+ * 
+ * @param navController The navigation controller for navigating between screens.
+ * @param currUserId The current user id.
+ * @param follower The follower to display.
+ * @param viewModel The view model for managing the follower.
+ */
+
 @Composable
 fun FollowerCard(navController: NavController, currUserId: Int, follower: User, viewModel: FollowerCardViewModel) {
     val isFollowing by viewModel.getIsFollowing(currUserId, follower.uid).collectAsState()
@@ -64,6 +74,15 @@ fun FollowerCard(navController: NavController, currUserId: Int, follower: User, 
         )
     }
 }
+
+
+
+/**
+ * This is the followers screen.
+ * 
+ * @param navController The navigation controller for navigating between screens.
+ * @param currentUserId The current user id.
+ */
 
 @Composable
 fun FollowersScreen(

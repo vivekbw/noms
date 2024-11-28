@@ -64,6 +64,14 @@ import com.example.noms.ui.profile.ViewModels.ProfileScreenViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
+
+/**
+ * This is the profile screen.
+ * 
+ * @param navController The navigation controller for navigating between screens.
+ * @param innerPadding The inner padding for the screen.
+ */
+
 @Composable
 fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
     val viewModel: ProfileScreenViewModel = viewModel()

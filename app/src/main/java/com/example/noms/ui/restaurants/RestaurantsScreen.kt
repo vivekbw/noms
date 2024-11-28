@@ -58,14 +58,20 @@ import com.google.maps.android.compose.Marker
 import com.example.noms.backend.addRestaurant
 import com.example.noms.backend.getAllRestaurants
 
+
+/**
+ * This is the main screen which includes the Map, search bar and the list of restaurants.
+ * 
+ * @param navController The navigation controller for navigating between screens.
+ * @param viewModel The view model for managing the restaurants.
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RestaurantsScreen(
     navController: NavController,
-    innerPadding: PaddingValues,
     viewModel: RestaurantsViewModel = viewModel()
 ) {
-    val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
@@ -77,10 +83,8 @@ fun RestaurantsScreen(
     val context = LocalContext.current
 
     // Observing ViewModel states
-    val restaurants = viewModel.restaurants
     val visibleRestaurants = viewModel.visibleRestaurants
     val playlists = viewModel.playlists
-    val searchQuery = viewModel.searchQuery.value
     val searchResults = viewModel.searchResults.value
     val showDialog = viewModel.showDialog.value
     val selectedPrediction = viewModel.selectedPrediction.value
@@ -151,7 +155,7 @@ fun RestaurantsScreen(
 
     // Search Results Overlay
     if (searchResults.isNotEmpty()) {
-        SearchResultsOverlay(
+        SearchResultsFunction(
             searchResults = searchResults,
             onResultClick = { prediction ->
                 viewModel.onSearchResultSelected(prediction)
@@ -181,6 +185,16 @@ fun RestaurantsScreen(
         )
     }
 }
+
+/**
+ * This is the landscape layout for the restaurants screen.
+ * 
+ * @param restaurants The list of restaurants to display.
+ * @param cameraPositionState The camera position state for the map.
+ * @param viewModel The view model for managing the restaurants.
+ * @param navController The navigation controller for navigating between screens.
+ * @param context The context for the screen.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -268,6 +282,17 @@ fun LandscapeLayout(
     }
 }
 
+/**
+ * This is the portrait layout for the restaurants screen.
+ * 
+ * @param restaurants The list of restaurants to display.
+ * @param cameraPositionState The camera position state for the map.
+ * @param viewModel The view model for managing the restaurants.
+ * @param navController The navigation controller for navigating between screens.
+ * @param context The context for the screen.
+ * @param scaffoldState The scaffold state for the bottom sheet.
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PortraitLayout(
@@ -345,6 +370,14 @@ fun PortraitLayout(
     }
 }
 
+
+/**
+ * This is the search bar for the restaurants screen.
+ * 
+ * @param query The current query for the search bar.
+ * @param onQueryChange The function to call when the query changes.
+ */
+
 @Composable
 fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
     OutlinedTextField(
@@ -358,8 +391,15 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
     )
 }
 
+/**
+ * This is the search results overlay for the restaurants screen.
+ * 
+ * @param searchResults The list of search results to display.
+ * @param onResultClick The function to call when a result is clicked.
+ */
+
 @Composable
-fun SearchResultsOverlay(
+fun SearchResultsFunction (
     searchResults: List<AutocompletePrediction>,
     onResultClick: (AutocompletePrediction) -> Unit
 ) {
@@ -383,6 +423,16 @@ fun SearchResultsOverlay(
         }
     }
 }
+
+/**
+ * This is the add restaurant dialog for the restaurants screen.
+ * 
+ * @param prediction The prediction to display.
+ * @param onConfirm The function to call when the confirm button is clicked.
+ * @param onAddToPlaylist The function to call when the add to playlist button is clicked.
+ * @param onTakeMeThere The function to call when the take me there button is clicked.
+ * @param onDismiss The function to call when the dialog is dismissed.
+ */
 
 @Composable
 fun AddRestaurantDialog(
@@ -436,6 +486,17 @@ fun AddRestaurantDialog(
         shape = RoundedCornerShape(16.dp)
     )
 }
+
+
+/**
+ * This is the add to playlist dialog for the restaurants screen.
+ * 
+ * @param playlists The list of playlists to display.
+ * @param selectedPlaylistId The selected playlist id.
+ * @param onSelect The function to call when a playlist is selected.
+ * @param onConfirm The function to call when the confirm button is clicked.
+ * @param onDismiss The function to call when the dialog is dismissed.
+ */
 
 @Composable
 fun AddToPlaylistDialog(
@@ -495,6 +556,13 @@ fun AddToPlaylistDialog(
     )
 }
 
+/**
+ * This is the my location button for the restaurants screen.
+ * 
+ * @param onClick The function to call when the button is clicked.
+ * @param modifier The modifier for the button.
+ */
+
 @Composable
 fun MyLocationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(
@@ -510,6 +578,16 @@ fun MyLocationButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         )
     }
 }
+
+/**
+ * This is the restaurant card for the restaurants screen.
+ * 
+ * @param context The context for the screen.
+ * @param restaurant The restaurant to display.
+ * @param onAddReviewClick The function to call when the add review button is clicked.
+ * @param onCardClick The function to call when the card is clicked.
+ * @param navController The navigation controller for navigating between screens.
+ */
 
 @Composable
 fun RestaurantCard(
@@ -633,6 +711,14 @@ fun RestaurantCard(
     }
 }
 
+/**
+ * This is the star rating bar for the restaurants screen.
+ * 
+ * @param maxStars The maximum number of stars.
+ * @param rating The current rating.
+ * @param onRatingChanged The function to call when the rating changes.
+ */
+
 @Composable
 fun StarRatingBar(
     maxStars: Int = 5,
@@ -673,6 +759,12 @@ fun StarRatingBar(
     }
 }
 
+/**
+ * This is the reviews list for the restaurants screen.
+ * 
+ * @param reviews The list of reviews to display.
+ */
+
 @Composable
 fun ReviewsList(reviews: List<Review>) {
     LazyColumn(
@@ -687,6 +779,12 @@ fun ReviewsList(reviews: List<Review>) {
         }
     }
 }
+
+/**
+ * This is the review card for the restaurants screen.
+ * 
+ * @param review The review to display.
+ */
 
 @Composable
 fun ReviewCard(review: Review) {

@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+/**
+ * This is the factory for the follower screen view model.
+ */
+
 class FollowerScreenViewModelFactory() : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FollowerScreenViewModel::class.java)) {
@@ -20,6 +24,10 @@ class FollowerScreenViewModelFactory() : ViewModelProvider.Factory {
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+/**
+ * This is the factory for the follower card view model.
+ */
 
 class FollowerCardViewModelFactory() : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -31,6 +39,9 @@ class FollowerCardViewModelFactory() : ViewModelProvider.Factory {
     }
 }
 
+/**
+ * This is the view model for the follower card.
+ */
 
 class FollowerCardViewModel() : ViewModel() {
     private val _followStatus = MutableStateFlow<Map<Pair<Int, Int>, Boolean>>(emptyMap())
@@ -60,6 +71,10 @@ class FollowerCardViewModel() : ViewModel() {
         }
     }
 }
+
+/**
+ * This is the view model for the followers screen.
+ */
 
 class FollowerScreenViewModel() : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
