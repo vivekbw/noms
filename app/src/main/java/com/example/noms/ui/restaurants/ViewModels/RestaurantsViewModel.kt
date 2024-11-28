@@ -36,11 +36,12 @@ import io.github.jan.supabase.exceptions.HttpRequestException
  * ViewModel for managing restaurant data, search functionality, location updates, and playlists.
  */
 class RestaurantsViewModel(application: Application) : AndroidViewModel(application) {
+    private val mapsApiKey = remoteConfig.getString("google_maps_key")
 
     // Initialize Places API
     init {
         if (!Places.isInitialized()) {
-            Places.initialize(application, "YOUR_API_KEY") // TODO: Replace with your actual API key
+            Places.initialize(application, mapsApiKey) // TODO: Replace with your actual API key
         }
     }
 
