@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,46 +24,68 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.noms.backend.User
+import com.example.noms.backend.followUser
+import com.example.noms.backend.unfollowUser
+import kotlinx.coroutines.launch
 
 @Composable
 fun FollowerCard(navController: NavController, currUserId: Int, follower: User, viewModel: FollowerCardViewModel) {
     val isFollowing by viewModel.getIsFollowing(currUserId, follower.uid).collectAsState()
     viewModel.fetchFollowStatus(currUserId, follower.uid ?: 0)
+    val coroutineScope = rememberCoroutineScope()
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp) // Add spacing between cards
+            .padding(vertical = 8.dp)
             .border(
                 width = 2.dp,
-                color = Color(0xFF2E8B57), // Green border
-                shape = RoundedCornerShape(50) // Rounded corners for the pill shape
+                color = Color(0xFF2E8B57),
+                shape = RoundedCornerShape(50)
             )
-            .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50)) // Light grey background for each card
+            .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(50))
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .clickable {
-                // Navigate to the playlist screen for the selected follower
                 follower.uid?.let { navController.navigate("Playlist/$it") }
-            }, // Add clickable to navigate
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // User's name
         Text(
             text = "${follower.first_name} ${follower.last_name}",
-            style = MaterialTheme.typography.bodyMedium, // Slightly smaller text
-            color = Color.Black // Text color for readability
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black
         )
 
-        // Follower indicator
-        Box(
-            modifier = Modifier
-                .size(20.dp) // Smaller indicator
-                .background(
-                    color = if (isFollowing) Color.Green else Color.Red,
-                    shape = CircleShape // Circular shape for the indicator
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        follower.uid?.let { followerId ->
+                            if (isFollowing) {
+                                unfollowUser(currUserId, followerId)
+                            } else {
+                                followUser(currUserId, followerId)
+                            }
+                            viewModel.fetchFollowStatus(currUserId, followerId)
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isFollowing) Color.Red else Color(0xFF2E8B57)
+                ),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = if (isFollowing) "Unfollow" else "Follow",
+                    color = Color.White
                 )
-        )
+            }
+        }
     }
 }
 
@@ -127,7 +151,7 @@ fun FollowersScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 64.dp)
+                contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 items(filteredUsers.size) { index ->
                     val user = filteredUsers[index]
@@ -144,7 +168,6 @@ fun FollowersScreen(
         }
     }
 }
-
 
 
 
