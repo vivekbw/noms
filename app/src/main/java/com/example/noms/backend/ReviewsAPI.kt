@@ -87,6 +87,10 @@ suspend fun followingRecommendedRestaurant(uid: Int): List<ReviewPost>{
     return reviewsToPost(followerReviews)
 }
 
+suspend fun getCurrentUserReviews(): List<ReviewPost>{
+    return reviewsToPost(getReviewsFromUser(getCurrentUid()))
+}
+
 suspend fun getNextReviewID(): Int?{
     return supabase.postgrest.rpc("nextReviewID").data.toIntOrNull()
 }

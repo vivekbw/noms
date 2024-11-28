@@ -37,15 +37,15 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 @Composable
 fun SocialScreen(innerPadding: PaddingValues) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("For you", "Following")
+    val tabs = listOf("For you", "From you")
 
     var reviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
-    var followingReviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    var YourReviews by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
 
     // Fetch review posts asynchronously
     LaunchedEffect(Unit) {
         reviewPosts = recommendRestaurants()
-        followingReviewPosts = followingRecommendedRestaurant(getCurrentUid())
+        YourReviews = getCurrentUserReviews()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF2F4F5))) {
@@ -58,7 +58,7 @@ fun SocialScreen(innerPadding: PaddingValues) {
 
         when (selectedTab) {
             0 -> ForYouTab(reviewPosts)
-            1 -> ForYouTab(followingReviewPosts)
+            1 -> ForYouTab(YourReviews)
         }
     }
 }
