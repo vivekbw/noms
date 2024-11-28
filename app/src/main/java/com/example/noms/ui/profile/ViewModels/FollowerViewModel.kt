@@ -55,7 +55,7 @@ class FollowerCardViewModel() : ViewModel() {
     // Function to fetch and update follow status
     fun fetchFollowStatus(currUserId: Int, followerId: Int) {
         viewModelScope.launch {
-            val isFollowing = doesFollow(followerId, currUserId) // Fetch the status
+            val isFollowing = doesFollow(currUserId, followerId)
             _followStatus.update { it + ((currUserId to followerId) to isFollowing) } // Update cache
         }
     }
