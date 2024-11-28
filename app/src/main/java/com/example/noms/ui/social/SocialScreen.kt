@@ -41,11 +41,29 @@ fun SocialScreen(innerPadding: PaddingValues) {
 
     var reviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
     var YourReviews by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    
+
+    var isActive by remember { mutableStateOf(true) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            isActive = false
+        }
+    }
 
     // Fetch review posts asynchronously
     LaunchedEffect(Unit) {
-        reviewPosts = recommendRestaurants()
-        YourReviews = getCurrentUserReviews()
+        try {
+            val forYouPosts = recommendRestaurants()
+            val userReviews = getCurrentUserReviews()
+            
+            if (isActive) {
+                reviewPosts = forYouPosts
+                YourReviews = userReviews
+            }
+        } catch (e: Exception) {
+            Log.e("SocialScreen", "Error fetching reviews: ${e.message}")
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF2F4F5))) {
