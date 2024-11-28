@@ -153,7 +153,6 @@ fun RestaurantsScreen(
         )
     }
 
-    // Search Results Overlay
     if (searchResults.isNotEmpty()) {
         SearchResultsFunction(
             searchResults = searchResults,
