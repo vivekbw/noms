@@ -1,5 +1,9 @@
-package com.example.noms.ui.followers
+package com.example.noms.ui.profile.View
 
+import FollowerCardViewModel
+import FollowerScreenViewModel
+import FollowerCardViewModelFactory
+import FollowerScreenViewModelFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,30 +18,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.noms.backend.User
-import com.example.noms.backend.doesFollow
-import com.example.noms.backend.getAllUsers
-import com.example.noms.backend.getFollowers
-import kotlinx.coroutines.launch
-
-
 
 @Composable
-fun FollowerCard(navController: NavController, currUserId: Int, follower: User) {
-    var isFollowing by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-
-    // Check if the current user follows this follower
-    LaunchedEffect(follower.uid) {
-        follower.uid?.let { followeeId ->
-            coroutineScope.launch {
-                isFollowing = doesFollow(currUserId, followeeId)
-            }
-        }
-    }
+fun FollowerCard(navController: NavController, currUserId: Int, follower: User, viewModel: FollowerCardViewModel) {
+    val isFollowing by viewModel.getIsFollowing(currUserId, follower.uid).collectAsState()
+    viewModel.fetchFollowStatus(currUserId, follower.uid ?: 0)
 
     Row(
         modifier = Modifier
@@ -77,17 +66,19 @@ fun FollowerCard(navController: NavController, currUserId: Int, follower: User) 
 }
 
 @Composable
-fun FollowersScreen(navController: NavController, currentUserId: Int) {
-    val coroutineScope = rememberCoroutineScope()
-    var users by remember { mutableStateOf(listOf<User>()) }
-    var searchQuery by remember { mutableStateOf("") }
+fun FollowersScreen(
+    navController: NavController,
+    currentUserId: Int,
+) {
+    val viewModel: FollowerScreenViewModel = viewModel(
+        factory = FollowerScreenViewModelFactory()
+    )
+    val followerViewModel: FollowerCardViewModel = viewModel(
+        factory = FollowerCardViewModelFactory()
+    )
 
-    // Fetch all users when the screen loads
-    LaunchedEffect(currentUserId) {
-        coroutineScope.launch {
-            users = getAllUsers()
-        }
-    }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val filteredUsers by viewModel.filteredUsers.collectAsState()
 
     Column(
         modifier = Modifier
@@ -97,13 +88,17 @@ fun FollowersScreen(navController: NavController, currentUserId: Int) {
         // Search Bar
         BasicTextField(
             value = searchQuery,
-            onValueChange = { searchQuery = it },
+            onValueChange = {
+                if (it != searchQuery) { // Only update if the query is different
+                    viewModel.updateSearchQuery(it)
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .border(
                     width = 2.dp,
-                    color = Color(0xFF2E8B57), // Green border
-                    shape = RoundedCornerShape(50) // Rounded corners for the pill shape
+                    color = Color(0xFF2E8B57),
+                    shape = RoundedCornerShape(50)
                 )
                 .background(Color(0xFFc6c6c6), shape = RoundedCornerShape(50))
                 .padding(12.dp),
@@ -123,26 +118,34 @@ fun FollowersScreen(navController: NavController, currentUserId: Int) {
                 .fillMaxSize()
                 .border(
                     width = 2.dp,
-                    color = Color(0xFF2E8B57), // Green border
+                    color = Color(0xFF2E8B57),
                     shape = RoundedCornerShape(16.dp)
                 )
-                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp)) // Grey background
-                .padding(16.dp) // Padding inside the enclosing box
+                .background(Color(0xFFEBEBEB), shape = RoundedCornerShape(16.dp))
+                .padding(16.dp)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 64.dp) // Add padding to prevent overlap with the navbar
+                contentPadding = PaddingValues(bottom = 64.dp)
             ) {
-                val filteredUsers = users.filter { it.first_name.contains(searchQuery, ignoreCase = true) }
                 items(filteredUsers.size) { index ->
                     val user = filteredUsers[index]
-                    FollowerCard(navController = navController, currUserId = currentUserId, follower = user)
+
+                    // Pass followerViewModel manually
+                    FollowerCard(
+                        navController = navController,
+                        currUserId = currentUserId,
+                        follower = user,
+                        viewModel = followerViewModel
+                    )
                 }
             }
         }
     }
 }
+
+
 
 
 

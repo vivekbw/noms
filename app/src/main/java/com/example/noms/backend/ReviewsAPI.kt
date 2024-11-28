@@ -31,6 +31,7 @@ suspend fun getReviewsFromRestaurant(rid: Int): List<Review>{
 }
 
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 suspend fun writeReview(uid: Int, rid: Int, text:String, rating:Float){
     val curDate = java.time.LocalDate.now()
@@ -56,6 +57,7 @@ suspend fun reviewsToPost(reviews: List<Review>): List<ReviewPost>{
                 restaurantName = restaurant.name,
                 rating = review.rating,
                 comment = review.text
+//                image =
             )
         } else {
             null

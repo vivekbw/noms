@@ -1,5 +1,6 @@
 package com.example.noms.backend
 
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.google.firebase.ktx.Firebase
@@ -62,12 +63,13 @@ data class Playlist(
     val name: String,
 )
 
-@Serializable
+//@Serializable
 data class ReviewPost(
     val reviewerName: String,
     val restaurantName: String,
     val rating: Float,
     val comment: String
+//    val image: Bitmap?
 )
 
 // For backend only, don't use this
