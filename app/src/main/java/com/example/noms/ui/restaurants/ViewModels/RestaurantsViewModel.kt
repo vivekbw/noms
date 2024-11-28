@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import io.github.jan.supabase.exceptions.HttpRequestException
+import kotlin.math.log
 
 /**
  * ViewModel for managing restaurant data, search functionality, location updates, and playlists.
@@ -273,9 +274,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                             restaurant?.rid?.let { rid ->
                                 addRestaurantToPlaylist(rid = rid, pid = pid)
                                 updateRestaurantLists(restaurant)
-
-                                // Emit navigation event
-                                emitNavigationEvent(NavigationEvent.NavigateToDetails(restaurant.placeId))
                             } ?: run {
                                 Log.e(
                                     "RestaurantsViewModel",
@@ -401,10 +399,12 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                     val newRestaurant = Restaurant(
                         name = place.name ?: prediction.getPrimaryText(null).toString(),
                         location = locationString,
-                        rating = place.rating?.toFloat() ?: 0.0f,
+                        rating = 0.0f,
                         placeId = prediction.placeId,
                         description = ""
                     )
+
+//                    Log.d("Rating", newRestaurant.toString())
 
                     // Add to backend if it doesn't exist
                     val existingRestaurants = getAllRestaurants()
