@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                                 Log.d("RemoteConfig", "Places API Key: ${remoteConfig.getString("places_api_key")}")
                                 Log.d("RemoteConfig", "Google Maps Key: ${remoteConfig.getString("google_maps_key")}")
 
-                                val mapsApiKey = "AIzaSyDA0NJYciapVsDwGoZPA69UDaJAhzOmstE"
+                                val mapsApiKey = "AIzaSyAirvBM5eu-0NebTtxFcG0eINDZtJVfAoQ"
                                 if (mapsApiKey.isNotEmpty()) {
                                     Places.initialize(applicationContext, mapsApiKey)
                                     Log.d("PlacesAPI", "Places API initialized successfully with Remote Config key")
