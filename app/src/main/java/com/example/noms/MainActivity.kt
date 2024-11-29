@@ -67,8 +67,8 @@ class MainActivity : ComponentActivity() {
                                     Log.e("Maps", "No API key available from Remote Config")
                                 }
 
-                                val supabaseUrl = remoteConfig.getString("supabase_url")
-                                val supabaseKey = remoteConfig.getString("supabase_key")
+                                val supabaseUrl = "https://xoffilinikbhnlvdfaib.supabase.co"
+                                val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZmZpbGluaWtiaG5sdmRmYWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0OTYxMzEsImV4cCI6MjA0MzA3MjEzMX0.2x8XkQS3ahCmYJJHSn6581ki2wh4-mbcWzBEUEmGtu0"
                                 if (supabaseUrl.isNotEmpty() && supabaseKey.isNotEmpty()) {
                                     val supabase = createSupabaseClient(
                                         supabaseUrl = supabaseUrl,
