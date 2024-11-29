@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+// ViewModel for the FollowerScreen
 class FollowingScreenViewModelFactory() : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FollowingScreenViewModel::class.java)) {
@@ -24,6 +25,7 @@ class FollowingScreenViewModelFactory() : ViewModelProvider.Factory {
     }
 }
 
+// ViewModel for the FollowerScreen, manages search and filtering
 class FollowingScreenViewModel() : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     private val _users = MutableStateFlow<List<User>>(emptyList())
@@ -41,6 +43,7 @@ class FollowingScreenViewModel() : ViewModel() {
         }
     }
 
+    // Function to update the search query
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }

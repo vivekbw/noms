@@ -35,6 +35,7 @@ import com.example.noms.ui.profile.View.FollowerCard
 import com.example.noms.ui.profile.ViewModels.FollowingScreenViewModel
 import com.example.noms.ui.profile.ViewModels.FollowingScreenViewModelFactory
 
+// Card for each follower
 @Composable
 fun FollowCard(navController: NavController, follower: User) {
     Row(
@@ -64,6 +65,7 @@ fun FollowCard(navController: NavController, follower: User) {
     }
 }
 
+// Following screen, displays all users that the current user is following
 @Composable
 fun FollowingScreen(
     navController: NavController,

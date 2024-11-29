@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+// fetches user playlists and restaurants, logs them
 suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     val tag = "RestaurantPlaylist" // Tag for logging
 
@@ -50,6 +51,7 @@ suspend fun fetchUserPlaylistsAndRestaurants(uid: Int) {
     }
 }
 
+// ViewModel for the RestaurantPlaylist screen
 class RestaurantPlaylistCardViewModel(private val placeId: String) : ViewModel() {
     private val _photoBitmap = MutableStateFlow<Bitmap?>(null)
     val photoBitmap: StateFlow<Bitmap?> = _photoBitmap
@@ -71,7 +73,7 @@ class RestaurantPlaylistCardViewModel(private val placeId: String) : ViewModel()
     }
 }
 
-
+// Restaurant playlist ViewModel
 class RestaurantPlaylistViewModel : ViewModel() {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> get() = _playlists
@@ -87,14 +89,17 @@ class RestaurantPlaylistViewModel : ViewModel() {
 
     private val expandedPlaylists = mutableStateMapOf<Int, Boolean>()
 
+    // Function to check if a playlist is expanded
     fun isPlaylistExpanded(playlistId: Int): Boolean {
         return expandedPlaylists[playlistId] ?: false
     }
 
+    // Function to toggle playlist expansion
     fun togglePlaylistExpansion(playlistId: Int) {
         expandedPlaylists[playlistId] = !(expandedPlaylists[playlistId] ?: false)
     }
 
+    // Function to fetch user data
     fun fetchData(uid: Int) {
         viewModelScope.launch {
             try {

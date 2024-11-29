@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+// ViewModel for the FollowerScreen 
 class FollowerScreenViewModelFactory() : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FollowerScreenViewModel::class.java)) {
@@ -21,6 +22,7 @@ class FollowerScreenViewModelFactory() : ViewModelProvider.Factory {
     }
 }
 
+// ViewModel for the FollowerCard
 class FollowerCardViewModelFactory() : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FollowerCardViewModel::class.java)) {
@@ -31,7 +33,7 @@ class FollowerCardViewModelFactory() : ViewModelProvider.Factory {
     }
 }
 
-
+// ViewModel for the FollowerCard, manages follow status
 class FollowerCardViewModel() : ViewModel() {
     private val _followStatus = MutableStateFlow<Map<Pair<Int, Int>, Boolean>>(emptyMap())
 
@@ -61,6 +63,7 @@ class FollowerCardViewModel() : ViewModel() {
     }
 }
 
+// ViewModel for the FollowerScreen, manages search and filtering
 class FollowerScreenViewModel() : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     private val _users = MutableStateFlow<List<User>>(emptyList())

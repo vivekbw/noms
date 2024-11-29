@@ -39,6 +39,7 @@ fun stringToLatLng(location: String): Pair<Double, Double>? {
     }
 }
 
+// get restaurant by id
 suspend fun getRestaurant(rid: Int): Restaurant{
     val result = supabase.from("restaurants").select(){
         filter {
@@ -48,11 +49,13 @@ suspend fun getRestaurant(rid: Int): Restaurant{
     return result
 }
 
+// get all restaurants
 suspend fun getAllRestaurants(): List<Restaurant>{
     val restaurants = supabase.from("restaurants").select().decodeList<Restaurant>()
     return restaurants
 }
 
+// get all restaurants in a playlist
 suspend fun searchByLocation(location: String): Boolean {
 //    Log.d("RestaurantsAPI", "Searching for restaurant at location: $location")
     val result = supabase.from("restaurants").select(columns = Columns.list("location")) {
@@ -64,6 +67,7 @@ suspend fun searchByLocation(location: String): Boolean {
     return result != "[]"
 }
 
+// add restaurant
 suspend fun addRestaurant(location: String, name: String, placeId: String) {
 //    Log.d("RestaurantsAPI", "Checking if restaurant exists at location: $location")
     if (!searchByLocation(location)) {
@@ -87,7 +91,7 @@ suspend fun addRestaurant(location: String, name: String, placeId: String) {
     }
 }
 
-
+// get the photo reference of a place
 suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadata? {
     return withContext(Dispatchers.IO) {
         val placesClient = com.google.android.libraries.places.api.Places.createClient(context)
@@ -103,6 +107,7 @@ suspend fun fetchPhotoReference(context: Context, placeId: String): PhotoMetadat
     }
 }
 
+// fetch the photo of a place
 suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? {
     return withContext(Dispatchers.IO) {
         val placesClient = com.google.android.libraries.places.api.Places.createClient(context)
@@ -117,6 +122,7 @@ suspend fun fetchPhoto(context: Context, photoMetadata: PhotoMetadata): Bitmap? 
     }
 }
 
+// search for places
 suspend fun searchPlaces(context: Context, query: String): List<com.google.android.libraries.places.api.model.AutocompletePrediction> {
     return withContext(Dispatchers.IO) {
         val placesClient = com.google.android.libraries.places.api.Places.createClient(context)
@@ -137,6 +143,7 @@ suspend fun searchPlaces(context: Context, query: String): List<com.google.andro
     }
 }
 
+// get details of a place
 suspend fun getPlaceDetails(context: Context, placeId: String): com.google.android.libraries.places.api.model.Place? {
     return withContext(Dispatchers.IO) {
         val placesClient = com.google.android.libraries.places.api.Places.createClient(context)
@@ -158,6 +165,7 @@ suspend fun getPlaceDetails(context: Context, placeId: String): com.google.andro
     }
 }
 
+// get the location of a place
 fun parseLocationString(locationStr: String): LatLng? {
     return try {
         val (lat, lng) = locationStr.split(",").map { it.trim().toDouble() }
@@ -167,6 +175,7 @@ fun parseLocationString(locationStr: String): LatLng? {
     }
 }
 
+// check if a location is visible on the map
 fun isLocationVisible(location: String, visibleRegion: LatLngBounds): Boolean {
     return parseLocationString(location)?.let { latLng ->
         visibleRegion.contains(latLng)
