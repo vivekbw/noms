@@ -34,7 +34,7 @@ suspend fun getPlaylist(pid: Int): List<Restaurant> {
 }
 
 
-
+// input playlist id, get all restaurants in that playlist
 suspend fun createPlaylist(name:String, uid:Int){
     val newPlaylist = Playlist(
         uid = uid,
@@ -43,6 +43,7 @@ suspend fun createPlaylist(name:String, uid:Int){
     supabase.from("playlists").insert(newPlaylist)
 }
 
+// add restaurant to playlist
 suspend fun addRestaurantToPlaylist(rid:Int, pid:Int){
     val addRestaurant = PlaylistRestaurantid(
         pid = pid,
@@ -51,6 +52,7 @@ suspend fun addRestaurantToPlaylist(rid:Int, pid:Int){
     supabase.from("playlist_restaurants").insert(addRestaurant)
 }
 
+// remove restaurant from playlist
 suspend fun getPlaylistId(name: String): Int? {
     // Fetch the playlist ID based on the playlist name
     val result = supabase.from("playlists").select() {
@@ -61,7 +63,7 @@ suspend fun getPlaylistId(name: String): Int? {
     return result.id
 }
 
-
+// remove restaurant from playlist
 suspend fun followPlaylist(uid: Int, pid:Int){
     val follow = FollowPlaylist(
         uid = uid,

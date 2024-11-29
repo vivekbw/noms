@@ -29,7 +29,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import com.example.noms.R
 import android.util.Log
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.noms.backend.*
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 
 /**
  * This is the social screen.
@@ -38,15 +41,33 @@ import com.example.noms.backend.*
 @Composable
 fun SocialScreen(innerPadding: PaddingValues) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("For you", "Following")
+    val tabs = listOf("For you", "From you")
 
     var reviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
-    var followerReviewPosts by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    var YourReviews by remember { mutableStateOf<List<ReviewPost>>(emptyList()) }
+    
+
+    var isActive by remember { mutableStateOf(true) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            isActive = false
+        }
+    }
 
     // Fetch review posts asynchronously
     LaunchedEffect(Unit) {
-        reviewPosts = recommendRestaurants()
-        followerReviewPosts = followersRecommendedRestaurant(4)
+        try {
+            val forYouPosts = recommendRestaurants()
+            val userReviews = getCurrentUserReviews()
+            
+            if (isActive) {
+                reviewPosts = forYouPosts
+                YourReviews = userReviews
+            }
+        } catch (e: Exception) {
+            Log.e("SocialScreen", "Error fetching reviews: ${e.message}")
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF2F4F5))) {
@@ -59,7 +80,7 @@ fun SocialScreen(innerPadding: PaddingValues) {
 
         when (selectedTab) {
             0 -> ForYouTab(reviewPosts)
-            1 -> ForYouTab(followerReviewPosts)
+            1 -> ForYouTab(YourReviews)
         }
     }
 }
@@ -134,7 +155,7 @@ fun CustomTab(
 fun ForYouTab(reviewPosts: List<ReviewPost>) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(reviewPosts) { post ->
@@ -184,7 +205,8 @@ fun ReviewCard(review: ReviewPost) {
                     .height(200.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.img1),
+                    painter = review.image?.let { BitmapPainter(it.asImageBitmap()) }
+                        ?: painterResource(id = R.drawable.img1),
                     contentDescription = "Restaurant image",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop

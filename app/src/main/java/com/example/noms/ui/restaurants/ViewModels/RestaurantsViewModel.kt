@@ -31,16 +31,18 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import io.github.jan.supabase.exceptions.HttpRequestException
+import kotlin.math.log
 
 /**
  * ViewModel for managing restaurant data, search functionality, location updates, and playlists.
  */
 class RestaurantsViewModel(application: Application) : AndroidViewModel(application) {
+    private val mapsApiKey = remoteConfig.getString("google_maps_key")
 
     // Initialize Places API
     init {
         if (!Places.isInitialized()) {
-            Places.initialize(application, "YOUR_API_KEY") // TODO: Replace with your actual API key
+            Places.initialize(application, mapsApiKey)
         }
     }
 
@@ -89,7 +91,7 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
     init {
         viewModelScope.launch {
             fetchAllRestaurants()
-            fetchUserPlaylists(userId = 15) // TODO: Replace with actual user ID
+            fetchUserPlaylists(getCurrentUid())
         }
     }
 
@@ -105,14 +107,11 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
             updateVisibleRestaurants(currentCameraPosition.value.target)
         } catch (e: Exception) {
             Log.e("RestaurantsViewModel", "Error fetching restaurants: ${e.message}")
-            // TODO: Handle error appropriately, e.g., emit an error event
         }
     }
 
     /**
      * Fetches playlists for a given user and updates the playlists list.
-     *
-     * @param userId The ID of the user whose playlists are to be fetched.
      */
     private suspend fun fetchUserPlaylists(userId: Int) {
         try {
@@ -121,14 +120,11 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
             playlists.addAll(fetchedPlaylists)
         } catch (e: Exception) {
             Log.e("RestaurantsViewModel", "Error fetching playlists: ${e.message}")
-            // TODO: Handle error appropriately
         }
     }
 
     /**
      * Updates the list of visible restaurants based on the current camera position.
-     *
-     * @param currentLatLng The current latitude and longitude from the camera position.
      */
     fun updateVisibleRestaurants(currentLatLng: LatLng) {
         viewModelScope.launch {
@@ -157,9 +153,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Calculates LatLngBounds based on the current camera position.
-     *
-     * @param currentLatLng The current latitude and longitude.
-     * @return The calculated LatLngBounds.
      */
     private fun calculateBounds(currentLatLng: LatLng): LatLngBounds {
         val delta = 0.1
@@ -170,10 +163,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Checks if a given location string is within the visible region.
-     *
-     * @param location The location string in "latitude, longitude" format.
-     * @param visibleRegion The visible LatLngBounds.
-     * @return True if the location is within the bounds, false otherwise.
      */
     private fun isLocationVisible(location: String, visibleRegion: LatLngBounds): Boolean {
         return parseLocationString(location)?.let { latLng ->
@@ -183,8 +172,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Handles changes to the search query and updates the search results.
-     *
-     * @param query The new search query entered by the user.
      */
     fun onSearchQueryChanged(query: String) {
         searchQuery.value = query
@@ -199,8 +186,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Handles the selection of a search result.
-     *
-     * @param prediction The selected autocomplete prediction.
      */
     fun onSearchResultSelected(prediction: AutocompletePrediction) {
         selectedPrediction.value = prediction
@@ -246,11 +231,9 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                         selectedPrediction.value = null
                     } ?: run {
                         Log.e("RestaurantsViewModel", "Failed to get LatLng from place details")
-                        // TODO: Handle this error, possibly emit an error event
                     }
                 } catch (e: Exception) {
                     Log.e("RestaurantsViewModel", "Failed to add restaurant: ${e.message}")
-                    // TODO: Handle error appropriately
                 }
             }
         }
@@ -291,15 +274,11 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                             restaurant?.rid?.let { rid ->
                                 addRestaurantToPlaylist(rid = rid, pid = pid)
                                 updateRestaurantLists(restaurant)
-
-                                // Emit navigation event
-                                emitNavigationEvent(NavigationEvent.NavigateToDetails(restaurant.placeId))
                             } ?: run {
                                 Log.e(
                                     "RestaurantsViewModel",
                                     "Restaurant not found after adding to backend"
                                 )
-                                // TODO: Handle this error
                             }
 
                             // Reset dialog states
@@ -308,11 +287,9 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                             selectedPrediction.value = null
                         } ?: run {
                             Log.e("RestaurantsViewModel", "Failed to get LatLng from place details")
-                            // TODO: Handle this error
                         }
                     } catch (e: Exception) {
                         Log.e("RestaurantsViewModel", "Error adding to playlist: ${e.message}")
-                        // TODO: Handle error appropriately
                     }
                 }
             }
@@ -321,8 +298,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Updates the restaurant lists when a new restaurant is added.
-     *
-     * @param newRestaurant The newly added restaurant.
      */
     private fun updateRestaurantLists(newRestaurant: Restaurant) {
         if (!restaurants.any { it.placeId == newRestaurant.placeId }) {
@@ -359,18 +334,14 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                     }
             } catch (e: SecurityException) {
                 Log.e("RestaurantsViewModel", "Error getting location", e)
-                // TODO: Handle the security exception
             }
         } else {
             Log.w("RestaurantsViewModel", "Location permission not granted")
-            // TODO: Emit an event or update UI to prompt for permissions
         }
     }
 
     /**
      * Emits a navigation event to the UI layer.
-     *
-     * @param event The navigation event to emit.
      */
     private fun emitNavigationEvent(event: NavigationEvent) {
         viewModelScope.launch {
@@ -390,9 +361,6 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
 
     /**
      * Parses a location string into a LatLng object.
-     *
-     * @param locationStr The location string in "latitude, longitude" format.
-     * @return The corresponding LatLng object or null if parsing fails.
      */
     private fun parseLocationString(locationStr: String): LatLng? {
         return try {
@@ -431,10 +399,12 @@ class RestaurantsViewModel(application: Application) : AndroidViewModel(applicat
                     val newRestaurant = Restaurant(
                         name = place.name ?: prediction.getPrimaryText(null).toString(),
                         location = locationString,
-                        rating = place.rating?.toFloat() ?: 0.0f,
+                        rating = 0.0f,
                         placeId = prediction.placeId,
                         description = ""
                     )
+
+//                    Log.d("Rating", newRestaurant.toString())
 
                     // Add to backend if it doesn't exist
                     val existingRestaurants = getAllRestaurants()

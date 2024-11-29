@@ -7,6 +7,7 @@ import kotlin.reflect.jvm.internal.impl.types.TypeCheckerState.SupertypesPolicy.
 
 private var CurrentUser: User? = null
 
+// Get a user by their ID
 suspend fun getUser(uid: Int): User? {
     val result = supabase.from("users").select(){
         filter {
@@ -17,6 +18,7 @@ suspend fun getUser(uid: Int): User? {
     return result.firstOrNull()
 }
 
+// Get a user by their phone number
 suspend fun setCurrentUser(phoneNumber: String){
     CurrentUser = supabase.from("users").select(){
         filter {
@@ -25,10 +27,12 @@ suspend fun setCurrentUser(phoneNumber: String){
     }.decodeList<User>().first()  // Decode as a list instead of a single item
 }
 
+// Get the current user's ID
 fun getCurrentUid(): Int {
     return CurrentUser?.uid ?: 1
 }
 
+// Get the current user's phone number
 suspend fun confirmUser(phoneNumber: String): Boolean{
     val result = supabase.from("users").select(){
         filter {
@@ -39,12 +43,13 @@ suspend fun confirmUser(phoneNumber: String): Boolean{
     return result != "[]"
 }
 
-// only used for demo
+// Get all users
 suspend fun getAllUsers(): List<User>{
     val result = supabase.from("users").select().decodeList<User>()
     return result
 }
 
+// Create a new user
 suspend fun createUser(firstName: String, lastName: String, phoneNumber: String): Int{
     if (confirmUser(phoneNumber)) {
         return -1
@@ -58,6 +63,7 @@ suspend fun createUser(firstName: String, lastName: String, phoneNumber: String)
     return 0
 }
 
+// Find friends by name
 suspend fun findFriends(name: String): List<User>{
     val result = supabase.from("users").select(columns = Columns.list("first_name")){
         filter{

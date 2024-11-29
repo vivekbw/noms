@@ -61,6 +61,8 @@ import com.example.noms.backend.getCurrentUid
 import com.example.noms.backend.getPlaylistId
 import com.example.noms.backend.getUser
 import com.example.noms.ui.profile.ViewModels.ProfileScreenViewModel
+import com.example.noms.ui.profile.ViewModels.ProfileScreenViewModelFactory
+import com.example.noms.ui.profile.ViewModels.RestaurantPlaylistViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -74,7 +76,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
-    val viewModel: ProfileScreenViewModel = viewModel()
+    val playlistViewModel: RestaurantPlaylistViewModel = viewModel()
+    val viewModel: ProfileScreenViewModel = viewModel(
+        factory = ProfileScreenViewModelFactory(playlistViewModel)
+    )
 
     val user by viewModel.user.collectAsState()
     val allRestaurants by viewModel.allRestaurants.collectAsState()
@@ -137,14 +142,14 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(50),
                 border = BorderStroke(2.dp, seaGreen)
-            ) { Text("Followers", color = seaGreen) }
+            ) { Text("Search for friend", color = seaGreen) }
 
             Button(
                 onClick = { navController.navigate("Following") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(50),
                 border = BorderStroke(2.dp, seaGreen)
-            ) { Text("Following", color = seaGreen) }
+            ) { Text("Friends", color = seaGreen) }
         }
         // Restaurant Playlists Section
         Text(
@@ -154,7 +159,10 @@ fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        RestaurantPlaylistScreenWithCards(uid = getCurrentUid())
+        RestaurantPlaylistScreenWithCards(
+            uid = getCurrentUid(),
+            viewModel = playlistViewModel
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

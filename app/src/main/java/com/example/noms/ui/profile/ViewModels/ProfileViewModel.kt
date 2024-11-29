@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.stateIn
  * This is the view model for the profile screen.
  */
 
-class ProfileScreenViewModel : ViewModel() {
+class ProfileScreenViewModel(
+    private val playlistViewModel: RestaurantPlaylistViewModel
+) : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> get() = _user
 
@@ -37,6 +39,7 @@ class ProfileScreenViewModel : ViewModel() {
         fetchAllRestaurants()
     }
 
+    // Fetch user data
     private fun fetchUser() {
         viewModelScope.launch {
             try {
@@ -48,6 +51,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Fetch all restaurants
     private fun fetchAllRestaurants() {
         viewModelScope.launch {
             try {
@@ -58,10 +62,12 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Update playlist name
     fun updatePlaylistName(name: String) {
         _playlistName.value = name
     }
 
+    // Toggle restaurant selection
     fun toggleRestaurantSelection(restaurantId: Int, isSelected: Boolean) {
         _selectedRestaurants.value = if (isSelected) {
             _selectedRestaurants.value + restaurantId
@@ -70,6 +76,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Show/hide dialog
     fun showDialog(show: Boolean) {
         _showDialog.value = show
         if (!show) {
@@ -78,6 +85,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Create playlist
     fun createPlaylist(onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             if (playlistName.value.isNotBlank()) {
@@ -93,6 +101,9 @@ class ProfileScreenViewModel : ViewModel() {
                         playlistId?.let { addRestaurantToPlaylist(restaurantId, it) }
                     }
 
+                    // Refresh the playlists
+                    playlistViewModel.fetchData(currentUserId)
+                    
                     onSuccess()
                     showDialog(false)
                 } catch (e: Exception) {
@@ -102,5 +113,17 @@ class ProfileScreenViewModel : ViewModel() {
                 onError("Please enter a valid playlist name")
             }
         }
+    }
+}
+
+class ProfileScreenViewModelFactory(
+    private val playlistViewModel: RestaurantPlaylistViewModel
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileScreenViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfileScreenViewModel(playlistViewModel) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

@@ -104,14 +104,17 @@ class RestaurantPlaylistViewModel : ViewModel() {
 
     private val expandedPlaylists = mutableStateMapOf<Int, Boolean>()
 
+    // Function to check if a playlist is expanded
     fun isPlaylistExpanded(playlistId: Int): Boolean {
         return expandedPlaylists[playlistId] ?: false
     }
 
+    // Function to toggle playlist expansion
     fun togglePlaylistExpansion(playlistId: Int) {
         expandedPlaylists[playlistId] = !(expandedPlaylists[playlistId] ?: false)
     }
 
+    // Function to fetch user data
     fun fetchData(uid: Int) {
         viewModelScope.launch {
             try {
