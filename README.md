@@ -1,18 +1,32 @@
 
 # CS 346 Group Project | Team 101 - 15
 
+**Product Title:** noms
+
+**Platform Definition:** Android/mobile
+
+**Description:** *noms* is a personalized app that helps users discover and connect with meaningful restaurant experiences based on their unique preferences and nearby location. Some key features include following friends, writing restaurant reviews, and creating restaurant playlists.
+
+# Demo
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+	<img src="./Wiki_images/recording_noms.gif" alt="Screen recording demonstration" style="width: 200px;">
+</div>
+
+# Screenshots
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+	<img src="./Wiki_images/restaurant1.png" alt="Image 1" style="width: 200px; margin: 5px;">
+	<img src="./Wiki_images/restaurant2.png" alt="Image 1" style="width: 200px; margin: 5px;">
+	<img src="./Wiki_images/review.png" alt="Image 1" style="width: 200px; margin: 5px;">
+	<img src="./Wiki_images/social.png" alt="Image 1" style="width: 200px; margin: 5px;">
+</div>
+
+
+
 # Team Members
-## Team Number: 101 - 15
 - Ahmed Ahmed (ah4ahmed@uwaterloo.ca)
 - Vivek Bhardwaj (v24bhard@uwaterloo.ca)
 - Aiden Ramgoolam (aaramgoo@uwaterloo.ca)
 - Karthik Nambiar (k3nambia@uwaterloo.ca)
-
-**Project title:** noms
-
-**Platform definition:** Android/mobile
-
-**Description:** *noms* is a personalized app that helps users discover and connect with meaningful restaurant experiences based on their unique preferences and nearby location
 
 # Documents
 
@@ -20,8 +34,11 @@
 - [Project Proposal](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Project-Proposal)
 - [Design Proposal](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Design-Proposal)
 - [Meeting Minutes](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Sprint-1-meeting-minutes---M4)
+- [User Documentation](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/User-documentation)
+- [Project Reflections](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Project-reflections)
 
 # Releases
 - [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
 - [Release Version 2.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-2.0-Release)
 - [Release Version 3.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-3.0-Release)
+- [Final - Release Version 4.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/releases/Final)
