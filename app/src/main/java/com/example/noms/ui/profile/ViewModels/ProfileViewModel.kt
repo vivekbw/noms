@@ -35,6 +35,7 @@ class ProfileScreenViewModel(
         fetchAllRestaurants()
     }
 
+    // Fetch user data
     private fun fetchUser() {
         viewModelScope.launch {
             try {
@@ -46,6 +47,7 @@ class ProfileScreenViewModel(
         }
     }
 
+    // Fetch all restaurants
     private fun fetchAllRestaurants() {
         viewModelScope.launch {
             try {
@@ -56,10 +58,12 @@ class ProfileScreenViewModel(
         }
     }
 
+    // Update playlist name
     fun updatePlaylistName(name: String) {
         _playlistName.value = name
     }
 
+    // Toggle restaurant selection
     fun toggleRestaurantSelection(restaurantId: Int, isSelected: Boolean) {
         _selectedRestaurants.value = if (isSelected) {
             _selectedRestaurants.value + restaurantId
@@ -68,6 +72,7 @@ class ProfileScreenViewModel(
         }
     }
 
+    // Show/hide dialog
     fun showDialog(show: Boolean) {
         _showDialog.value = show
         if (!show) {
@@ -76,6 +81,7 @@ class ProfileScreenViewModel(
         }
     }
 
+    // Create playlist
     fun createPlaylist(onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             if (playlistName.value.isNotBlank()) {

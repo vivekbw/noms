@@ -5,7 +5,7 @@ import androidx.annotation.RequiresApi
 import io.github.jan.supabase.postgrest.from
 import java.time.format.DateTimeFormatter
 
-
+// get followers of a user
 suspend fun getFollowers(uid: Int): List<User> {
     val followerList = supabase.from("followers").select(){
         filter {
@@ -21,6 +21,7 @@ suspend fun getFollowers(uid: Int): List<User> {
     return followers
 }
 
+// get following of a user
 suspend fun getFollowing(uid: Int): List<User> {
     val followerList = supabase.from("followers").select(){
         filter {
@@ -36,6 +37,7 @@ suspend fun getFollowing(uid: Int): List<User> {
     return followers
 }
 
+// check if user is following another user
 suspend fun doesFollow(currUser: Int, followId: Int): Boolean{
     val count = supabase.from("followers").select(){
         filter {
@@ -48,6 +50,7 @@ suspend fun doesFollow(currUser: Int, followId: Int): Boolean{
     return count != "[]"
 }
 
+// follow a user
 @RequiresApi(Build.VERSION_CODES.O)
 suspend fun followUser(currUser: Int, followee: Int){
     val curDate = java.time.LocalDate.now()
@@ -61,6 +64,7 @@ suspend fun followUser(currUser: Int, followee: Int){
     }
 }
 
+// get follower count of a user
 suspend fun getFollowerCount(uid: Int): Int {
     // this is indeed inefficient but I can't figure out how to use the count
     // function so this is temporary solution
@@ -73,6 +77,7 @@ suspend fun getFollowerCount(uid: Int): Int {
     return followercount.size
 }
 
+// Unfollow a user
 suspend fun unfollowUser(follower_uid:Int, following_uid:Int){
     supabase.from("followers").delete{
         filter{

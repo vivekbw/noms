@@ -66,6 +66,7 @@ import com.example.noms.ui.profile.ViewModels.RestaurantPlaylistViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
+// Profile Screen, displays user profile information
 @Composable
 fun ProfileScreen(navController: NavController, innerPadding: PaddingValues) {
     val playlistViewModel: RestaurantPlaylistViewModel = viewModel()
