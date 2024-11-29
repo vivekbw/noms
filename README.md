@@ -43,6 +43,8 @@
 - [Release Version 3.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-3.0-Release)
 - [Final - Release Version 4.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/releases/Final)
 
+The *noms* APK can be installed here: [**APK Installer**](https://git.uwaterloo.ca/v24bhard/team-101-15/-/blob/main/app/release/app-release.apk?ref_type=heads)
+
 # Unit Tests
 We've created unit tests for all the core MVVM parts of our app, and this can be tested by going to android studio and clicking `Run All Tests`, which will result in the following success output:
 
