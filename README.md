@@ -46,4 +46,4 @@
 # Unit Tests
 We've created unit tests for all the core MVVM parts of our app, and this can be tested by going to android studio and clicking `Run All Tests`, which will result in the following success output:
 
-<img src="./Wiki_images/tests.png" alt="Social Page" width="800">
+<img src="./Wiki_images/tests.png" alt="Unit Testing Output" width="800">
