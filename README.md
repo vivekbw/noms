@@ -8,16 +8,16 @@
 **Description:** *noms* is a personalized app that helps users discover and connect with meaningful restaurant experiences based on their unique preferences and nearby location. Some key features include following friends, writing restaurant reviews, and creating restaurant playlists.
 
 # Demo
-<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-	<img src="./Wiki_images/recording_noms.gif" alt="Screen recording demonstration" style="width: 200px;">
+<div display="flex" flex-wrap="wrap" gap="10" justify-content="center">
+	<img src="./Wiki_images/recording_noms.gif" alt="Screen recording demonstration" width="200">
 </div>
 
 # Screenshots
-<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
-	<img src="./Wiki_images/restaurant1.png" alt="Image 1" style="width: 200px; margin: 5px;">
-	<img src="./Wiki_images/restaurant2.png" alt="Image 1" style="width: 200px; margin: 5px;">
-	<img src="./Wiki_images/review.png" alt="Image 1" style="width: 200px; margin: 5px;">
-	<img src="./Wiki_images/social.png" alt="Image 1" style="width: 200px; margin: 5px;">
+<div display="flex" flex-wrap="wrap" gap="10" justify-content="center">
+	<img src="./Wiki_images/restaurant1.png" alt="Restaurant Page 1" width="200">
+	<img src="./Wiki_images/restaurant2.png" alt="Restaurant Page 2" width="200">
+	<img src="./Wiki_images/review.png" alt="Reviews Page" width="200">
+	<img src="./Wiki_images/social.png" alt="Social Page" width="200">
 </div>
 
 
