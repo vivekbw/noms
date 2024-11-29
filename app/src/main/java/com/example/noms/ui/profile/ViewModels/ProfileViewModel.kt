@@ -12,8 +12,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-// ViewModel for the ProfileScreen
-class ProfileScreenViewModel : ViewModel() {
+class ProfileScreenViewModel(
+    private val playlistViewModel: RestaurantPlaylistViewModel
+) : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> get() = _user
 
@@ -96,6 +97,9 @@ class ProfileScreenViewModel : ViewModel() {
                         playlistId?.let { addRestaurantToPlaylist(restaurantId, it) }
                     }
 
+                    // Refresh the playlists
+                    playlistViewModel.fetchData(currentUserId)
+                    
                     onSuccess()
                     showDialog(false)
                 } catch (e: Exception) {
@@ -105,5 +109,17 @@ class ProfileScreenViewModel : ViewModel() {
                 onError("Please enter a valid playlist name")
             }
         }
+    }
+}
+
+class ProfileScreenViewModelFactory(
+    private val playlistViewModel: RestaurantPlaylistViewModel
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileScreenViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfileScreenViewModel(playlistViewModel) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
