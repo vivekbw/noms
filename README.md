@@ -37,8 +37,13 @@
 - [User Documentation](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/User-documentation)
 - [Project Reflections](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Project-reflections)
 
-# Releases
+# Releases and Installer's
 - [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
 - [Release Version 2.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-2.0-Release)
 - [Release Version 3.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-3.0-Release)
 - [Final - Release Version 4.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/releases/Final)
+
+# Unit Tests
+We've created unit tests for all the core MVVM parts of our app, and this can be tested by going to android studio and clicking `Run All Tests`, which will result in the following success output:
+
+<img src="./Wiki_images/tests.png" alt="Social Page" width="800">
