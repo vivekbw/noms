@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
+// ViewModel for the ProfileScreen
 class ProfileScreenViewModel : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> get() = _user
@@ -33,6 +34,7 @@ class ProfileScreenViewModel : ViewModel() {
         fetchAllRestaurants()
     }
 
+    // Fetch user data
     private fun fetchUser() {
         viewModelScope.launch {
             try {
@@ -44,6 +46,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Fetch all restaurants
     private fun fetchAllRestaurants() {
         viewModelScope.launch {
             try {
@@ -54,10 +57,12 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Update playlist name
     fun updatePlaylistName(name: String) {
         _playlistName.value = name
     }
 
+    // Toggle restaurant selection
     fun toggleRestaurantSelection(restaurantId: Int, isSelected: Boolean) {
         _selectedRestaurants.value = if (isSelected) {
             _selectedRestaurants.value + restaurantId
@@ -66,6 +71,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Show/hide dialog
     fun showDialog(show: Boolean) {
         _showDialog.value = show
         if (!show) {
@@ -74,6 +80,7 @@ class ProfileScreenViewModel : ViewModel() {
         }
     }
 
+    // Create playlist
     fun createPlaylist(onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             if (playlistName.value.isNotBlank()) {

@@ -28,6 +28,7 @@ import com.example.noms.backend.followUser
 import com.example.noms.backend.unfollowUser
 import kotlinx.coroutines.launch
 
+// FollowerCard composable that displays a user's name and a follow/unfollow button
 @Composable
 fun FollowerCard(navController: NavController, currUserId: Int, follower: User, viewModel: FollowerCardViewModel) {
     val isFollowing by viewModel.getIsFollowing(currUserId, follower.uid).collectAsState()
@@ -89,6 +90,7 @@ fun FollowerCard(navController: NavController, currUserId: Int, follower: User, 
     }
 }
 
+// FollowersScreen composable that displays a search bar and a list of followers
 @Composable
 fun FollowersScreen(
     navController: NavController,
