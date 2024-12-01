@@ -34,6 +34,10 @@ import com.example.noms.backend.*
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 
+/**
+ * This is the social screen.
+ */
+
 @Composable
 fun SocialScreen(innerPadding: PaddingValues) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -81,6 +85,10 @@ fun SocialScreen(innerPadding: PaddingValues) {
     }
 }
 
+/**
+ * This is the custom tab row for the social screen.
+ */
+
 @Composable
 fun CustomTabRow(
     selectedTabIndex: Int,
@@ -111,6 +119,10 @@ fun CustomTabRow(
     }
 }
 
+/**
+ * This is the custom tab for the social screen.
+ */
+
 @Composable
 fun CustomTab(
     title: String,
@@ -135,6 +147,10 @@ fun CustomTab(
     }
 }
 
+/**
+ * This is the for you tab for the social screen.
+ */
+
 @Composable
 fun ForYouTab(reviewPosts: List<ReviewPost>) {
     LazyColumn(
@@ -148,6 +164,10 @@ fun ForYouTab(reviewPosts: List<ReviewPost>) {
     }
 }
 
+/**
+ * This is the following tab for the social screen.
+ */
+
 @Composable
 fun FollowingTab() {
     Box(
@@ -158,6 +178,10 @@ fun FollowingTab() {
         Text("Following tab content")
     }
 }
+
+/**
+ * This is the review card for the social screen.
+ */
 
 @Composable
 fun ReviewCard(review: ReviewPost) {
@@ -253,6 +277,10 @@ fun ReviewCard(review: ReviewPost) {
         }
     }
 }
+
+/**
+ * This is the function to get the rating color for the review card.
+ */
 
 fun getRatingColor(rating: Float): Color {
     return when {

@@ -72,6 +72,11 @@ import androidx.compose.ui.unit.sp
 import com.example.noms.backend.*
 
 
+/**
+ * This is the photo grid screen for the restaurant detail screen.
+ * 
+ * @param photos The list of photos to display.
+ */
 @Composable
 fun PhotoGridScreen() {
     val photos = remember { mutableStateListOf<Bitmap?>() }
@@ -166,7 +171,11 @@ fun PhotoUploadSlot(
 //}
 
 
-
+/**
+ * This is the review screen for the restaurant detail screen.
+ * 
+ * @param onReviewSubmit The function to call when the review is submitted.
+ */
 @Composable
 fun ReviewScreen(onReviewSubmit: (String, Float) -> Unit) {
     var reviewText by remember { mutableStateOf("") }
@@ -236,7 +245,12 @@ fun ReviewScreen(onReviewSubmit: (String, Float) -> Unit) {
 
 
 
-
+/**
+ * This is the restaurant details screen for the restaurant detail screen.
+ * 
+ * @param restaurant The restaurant to display.
+ * @param onReviewSubmit The function to call when the review is submitted.
+ */
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

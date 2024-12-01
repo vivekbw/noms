@@ -122,7 +122,7 @@ fun MainScreen() {
             )
         ) {
             composable("Restaurants") {
-                RestaurantsScreen(navController, innerPadding)
+                RestaurantsScreen(navController)
             }
             composable("Social") {
                 SocialScreen(innerPadding)
