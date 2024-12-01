@@ -36,6 +36,7 @@
 - [Meeting Minutes](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Sprint-1-meeting-minutes---M4)
 - [User Documentation](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/User-documentation)
 - [Project Reflections](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Project-reflections)
+- [Design Diagrams](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Final-Design-diagrams)
 
 # Releases and Installer's
 - [Release Version 1.0](https://git.uwaterloo.ca/v24bhard/team-101-15/-/wikis/Version-1.0-Release)
