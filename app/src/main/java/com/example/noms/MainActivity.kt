@@ -45,21 +45,21 @@ class MainActivity : ComponentActivity() {
                             .build()
                         remoteConfig.setConfigSettingsAsync(configSettings)
                         remoteConfig.setDefaultsAsync(mapOf(
-                            "supabase_url" to "https://xoffilinikbhnlvdfaib.supabase.co",
-                            "supabase_key" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZmZpbGluaWtiaG5sdmRmYWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0OTYxMzEsImV4cCI6MjA0MzA3MjEzMX0.2x8XkQS3ahCmYJJHSn6581ki2wh4-mbcWzBEUEmGtu0",
-                            "places_api_key" to "AIzaSyAirvBM5eu-0NebTtxFcG0eINDZtJVfAoQ",
-                            "google_maps_key" to "AIzaSyAirvBM5eu-0NebTtxFcG0eINDZtJVfAoQ",
+                            "supabase_url" to "",
+                            "supabase_key" to "",
+                            "places_api_key" to "",
+                            "google_maps_key" to "",
                         ))
 
                         remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 Log.d("RemoteConfig", "Config params updated: ${task.result}")
-//                                Log.d("RemoteConfig", "Supabase URL: ${remoteConfig.getString("supabase_url")}")
-//                                Log.d("RemoteConfig", "Supabase Key: ${remoteConfig.getString("supabase_key")}")
-//                                Log.d("RemoteConfig", "Places API Key: ${remoteConfig.getString("places_api_key")}")
-//                                Log.d("RemoteConfig", "Google Maps Key: ${remoteConfig.getString("google_maps_key")}")
+                                Log.d("RemoteConfig", "Supabase URL: ${remoteConfig.getString("supabase_url")}")
+                                Log.d("RemoteConfig", "Supabase Key: ${remoteConfig.getString("supabase_key")}")
+                                Log.d("RemoteConfig", "Places API Key: ${remoteConfig.getString("places_api_key")}")
+                                Log.d("RemoteConfig", "Google Maps Key: ${remoteConfig.getString("google_maps_key")}")
 
-                                val mapsApiKey = "AIzaSyAirvBM5eu-0NebTtxFcG0eINDZtJVfAoQ"
+                                val mapsApiKey = "MAPS_API_KEY"
                                 if (mapsApiKey.isNotEmpty()) {
                                     Places.initialize(applicationContext, mapsApiKey)
                                     Log.d("PlacesAPI", "Places API initialized successfully with Remote Config key")
@@ -67,8 +67,8 @@ class MainActivity : ComponentActivity() {
                                     Log.e("Maps", "No API key available from Remote Config")
                                 }
 
-                                val supabaseUrl = "https://xoffilinikbhnlvdfaib.supabase.co"
-                                val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZmZpbGluaWtiaG5sdmRmYWliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc0OTYxMzEsImV4cCI6MjA0MzA3MjEzMX0.2x8XkQS3ahCmYJJHSn6581ki2wh4-mbcWzBEUEmGtu0"
+                                val supabaseUrl = "SUPABASE_URL"
+                                val supabaseKey = "SUPABASE_KEY"
                                 if (supabaseUrl.isNotEmpty() && supabaseKey.isNotEmpty()) {
                                     val supabase = createSupabaseClient(
                                         supabaseUrl = supabaseUrl,

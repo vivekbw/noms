@@ -1,5 +1,5 @@
 
-# CS 346 Group Project | Team 101 - 15
+# noms
 
 **Product Title:** noms
 
