@@ -21,6 +21,17 @@
 	<img src="./Wiki_images/social.png" alt="Social Page" width="200">
 </div>
 
+# Videos
+
+![WhatsApp_Video_2024-11-29_at_12.39.16_PM](uploads/b91abedc36ef253602f051739e5c8c25/WhatsApp_Video_2024-11-29_at_12.39.16_PM.mp4)
+
+![WhatsApp_Video_2024-11-29_at_12.39.04_PM](uploads/df1dff55d5096a460a9a1edc0fc61567/WhatsApp_Video_2024-11-29_at_12.39.04_PM.mp4)
+
+![WhatsApp_Video_2024-11-29_at_12.39.03_PM](uploads/c887799be8006190110876747e37b802/WhatsApp_Video_2024-11-29_at_12.39.03_PM.mp4)
+
+![Screen_Recording_20241129_124823_Noms__1_](uploads/596799eb1426cae5552c3f37365c1500/Screen_Recording_20241129_124823_Noms__1_.mp4)
+
+![WhatsApp_Video_2024-11-29_at_12.39.51_PM](uploads/83539f66bbe92a1c796102ca385e45eb/WhatsApp_Video_2024-11-29_at_12.39.51_PM.mp4)
 
 
 # Team Members
